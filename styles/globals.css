@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    /* font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; */
+    font-family: 'Roboto', sans-serif;
+    background-color: #F2F5E8;
+}
+
+header, footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #f0f0f0;
+}

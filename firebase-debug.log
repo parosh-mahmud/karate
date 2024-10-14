@@ -1,0 +1,110 @@
+[debug] [2024-10-13T17:29:57.169Z] ----------------------------------------------------------------------
+[debug] [2024-10-13T17:29:57.172Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Shariful\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2024-10-13T17:29:57.173Z] CLI Version:   13.22.0
+[debug] [2024-10-13T17:29:57.173Z] Platform:      win32
+[debug] [2024-10-13T17:29:57.173Z] Node Version:  v20.15.1
+[debug] [2024-10-13T17:29:57.173Z] Time:          Sun Oct 13 2024 23:29:57 GMT+0600 (Bangladesh Standard Time)
+[debug] [2024-10-13T17:29:57.173Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-10-13T17:29:57.254Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-10-13T17:29:57.255Z] > authorizing via signed-in user (prparosh@gmail.com)
+[debug] [2024-10-13T17:29:57.255Z] [iam] checking project combat-fd364 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2024-10-13T17:29:57.257Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:29:57.257Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:29:57.258Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions [none]
+[debug] [2024-10-13T17:29:57.258Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions x-goog-quota-user=projects/combat-fd364
+[debug] [2024-10-13T17:29:57.258Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2024-10-13T17:29:58.947Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions 200
+[debug] [2024-10-13T17:29:58.947Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2024-10-13T17:29:58.948Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:29:58.948Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:29:58.948Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/combat-fd364 [none]
+[debug] [2024-10-13T17:29:59.680Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/combat-fd364 200
+[debug] [2024-10-13T17:29:59.680Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/combat-fd364 {"projectId":"combat-fd364","projectNumber":"427463023275","displayName":"combat","name":"projects/combat-fd364","resources":{"hostingSite":"combat-fd364"},"state":"ACTIVE","etag":"1_f33dd079-49c9-447e-bb8f-3fc7d0eceb02"}
+[debug] [2024-10-13T17:30:02.203Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:30:02.203Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:30:02.203Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites pageToken=&pageSize=10
+[debug] [2024-10-13T17:30:03.572Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites 200
+[debug] [2024-10-13T17:30:03.572Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites {"sites":[{"name":"projects/combat-fd364/sites/combat-fd364","defaultUrl":"https://combat-fd364.web.app","appId":"1:427463023275:web:0949d75d5bb9d7e917b5ee","type":"DEFAULT_SITE"}]}
+[debug] [2024-10-13T17:30:03.573Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:30:03.573Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:30:03.573Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:427463023275:web:0949d75d5bb9d7e917b5ee/config [none]
+[debug] [2024-10-13T17:30:04.657Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:427463023275:web:0949d75d5bb9d7e917b5ee/config 200
+[debug] [2024-10-13T17:30:04.658Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:427463023275:web:0949d75d5bb9d7e917b5ee/config {"projectId":"combat-fd364","appId":"1:427463023275:web:0949d75d5bb9d7e917b5ee","storageBucket":"combat-fd364.appspot.com","apiKey":"AIzaSyDm9aLKraofIHRKCH_sBXJg9ieLUSrk-78","authDomain":"combat-fd364.firebaseapp.com","messagingSenderId":"427463023275","measurementId":"G-LJ3ZP0K8ZJ"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 14.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2024-10-13T17:30:10.486Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:30:10.486Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:30:10.486Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites/combat-fd364 [none]
+[debug] [2024-10-13T17:30:11.730Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites/combat-fd364 200
+[debug] [2024-10-13T17:30:11.731Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites/combat-fd364 {"name":"projects/combat-fd364/sites/combat-fd364","defaultUrl":"https://combat-fd364.web.app","appId":"1:427463023275:web:0949d75d5bb9d7e917b5ee","type":"DEFAULT_SITE"}
+[info]   ▲ Next.js 14.2.15
+
+[info] 
+
+[info]    Linting and checking validity of types ...
+
+[debug] [2024-10-13T17:46:37.273Z] ----------------------------------------------------------------------
+[debug] [2024-10-13T17:46:37.276Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Shariful\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2024-10-13T17:46:37.276Z] CLI Version:   13.22.0
+[debug] [2024-10-13T17:46:37.276Z] Platform:      win32
+[debug] [2024-10-13T17:46:37.277Z] Node Version:  v20.15.1
+[debug] [2024-10-13T17:46:37.277Z] Time:          Sun Oct 13 2024 23:46:37 GMT+0600 (Bangladesh Standard Time)
+[debug] [2024-10-13T17:46:37.277Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-10-13T17:46:37.362Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-10-13T17:46:37.362Z] > authorizing via signed-in user (prparosh@gmail.com)
+[debug] [2024-10-13T17:46:37.362Z] [iam] checking project combat-fd364 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2024-10-13T17:46:37.364Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:37.364Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:37.365Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions [none]
+[debug] [2024-10-13T17:46:37.365Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions x-goog-quota-user=projects/combat-fd364
+[debug] [2024-10-13T17:46:37.366Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2024-10-13T17:46:39.111Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions 200
+[debug] [2024-10-13T17:46:39.112Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/combat-fd364:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2024-10-13T17:46:39.113Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:39.113Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:39.114Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/combat-fd364 [none]
+[debug] [2024-10-13T17:46:39.977Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/combat-fd364 200
+[debug] [2024-10-13T17:46:39.977Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/combat-fd364 {"projectId":"combat-fd364","projectNumber":"427463023275","displayName":"combat","name":"projects/combat-fd364","resources":{"hostingSite":"combat-fd364"},"state":"ACTIVE","etag":"1_f33dd079-49c9-447e-bb8f-3fc7d0eceb02"}
+[debug] [2024-10-13T17:46:42.512Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:42.512Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:42.513Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites pageToken=&pageSize=10
+[debug] [2024-10-13T17:46:43.870Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites 200
+[debug] [2024-10-13T17:46:43.870Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites {"sites":[{"name":"projects/combat-fd364/sites/combat-fd364","defaultUrl":"https://combat-fd364.web.app","appId":"1:427463023275:web:0949d75d5bb9d7e917b5ee","type":"DEFAULT_SITE"}]}
+[debug] [2024-10-13T17:46:43.870Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:43.870Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:43.870Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:427463023275:web:0949d75d5bb9d7e917b5ee/config [none]
+[debug] [2024-10-13T17:46:45.172Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:427463023275:web:0949d75d5bb9d7e917b5ee/config 200
+[debug] [2024-10-13T17:46:45.173Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:427463023275:web:0949d75d5bb9d7e917b5ee/config {"projectId":"combat-fd364","appId":"1:427463023275:web:0949d75d5bb9d7e917b5ee","storageBucket":"combat-fd364.appspot.com","apiKey":"AIzaSyDm9aLKraofIHRKCH_sBXJg9ieLUSrk-78","authDomain":"combat-fd364.firebaseapp.com","messagingSenderId":"427463023275","measurementId":"G-LJ3ZP0K8ZJ"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2024-10-13T17:46:52.998Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:52.998Z] Checked if tokens are valid: true, expires at: 1728844015609
+[debug] [2024-10-13T17:46:52.998Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites/combat-fd364 [none]
+[debug] [2024-10-13T17:46:54.267Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites/combat-fd364 200
+[debug] [2024-10-13T17:46:54.267Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/combat-fd364/sites/combat-fd364 {"name":"projects/combat-fd364/sites/combat-fd364","defaultUrl":"https://combat-fd364.web.app","appId":"1:427463023275:web:0949d75d5bb9d7e917b5ee","type":"DEFAULT_SITE"}
+[info]    Linting and checking validity of types ...
+
+[info]    ▲ Next.js 14.0.0
+
+[info] 
+   Creating an optimized production build ...
+
