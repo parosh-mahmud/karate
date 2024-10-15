@@ -1,5 +1,7 @@
 import "../styles/globals.css";
 import DefaultLayout from "../components/layouts/DefaultLayout";
+import "@fortawesome/fontawesome-svg-core/styles.css";
+import "../lib/fontawesome";
 
 function MyApp({ Component, pageProps }) {
   return (
