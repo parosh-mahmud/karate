@@ -35,21 +35,28 @@ export default function Faq() {
 
 const faqdata = [
   {
-    question: "Is this template completely free to use?",
-    answer: "Yes, this template is completely free to use.",
-  },
-  {
-    question: "Can I use it in a commercial project?",
-    answer: "Yes, this you can.",
-  },
-  {
-    question: "What is your refund policy? ",
+    question: "What combat training programs do you offer?",
     answer:
-      "If you're unhappy with your purchase for any reason, email us within 90 days and we'll refund you in full, no questions asked.",
+      "We offer a range of combat training programs, including martial arts, self-defense, weapon training, and fitness conditioning. Each program is tailored for different skill levels, from beginners to advanced fighters.",
   },
   {
-    question: "Do you offer technical support? ",
+    question: "Do I need prior experience to join the academy?",
     answer:
-      "No, we don't offer technical support for free downloads. Please purchase a support plan to get 6 months of support.",
+      "No, you don’t need any prior experience. Our programs are designed to cater to all levels, whether you’re a beginner or an experienced martial artist.",
+  },
+  {
+    question: "What is the age requirement to join JK Combat Academy?",
+    answer:
+      "We offer training for all ages. Kids can start from age 6, and we also have specialized programs for teens and adults.",
+  },
+  {
+    question: "Do you offer private training sessions?",
+    answer:
+      "Yes, we offer private training sessions for those looking for one-on-one guidance. Please contact us to schedule a session with one of our expert instructors.",
+  },
+  {
+    question: "What is your membership policy?",
+    answer:
+      "Our memberships come in flexible options, including monthly and yearly plans. Family packages and group discounts are also available.",
   },
 ];

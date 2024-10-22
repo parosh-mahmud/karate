@@ -14,26 +14,14 @@ import PopupWidget from "../components/popupWidget";
 import BlogSection from "../components/blog";
 import ImageGallery from "../components/gallery";
 
-//import dynamic from "next/dynamic";
-
-// const Video = dynamic(() => import("../components/video"));
-
-// const Benefits = dynamic(() => import("../components/benefits"));
-// const Footer = dynamic(() => import("../components/footer"));
-// const Testimonials = dynamic(() => import("../components/testimonials"));
-// const Cta = dynamic(() => import("../components/cta"));
-// const Faq = dynamic(() => import("../components/faq"));
-
-// const PopupWidget = dynamic(() => import("../components/popupWidget"));
-
 export default function Home() {
   return (
     <>
       <Head>
-        <title>Nextly - Free Nextjs & TailwindCSS Landing Page Template</title>
+        <title>JK Combat Academy - Master the Art of Combat</title>
         <meta
           name="description"
-          content="Nextly is a free landing page template built with next.js & Tailwind CSS"
+          content="JK Combat Academy is your destination for mastering martial arts and combat training. Join our academy to develop physical strength, mental resilience, and self-defense skills."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -43,35 +31,38 @@ export default function Home() {
       <BlogSection />
       <ImageGallery />
       <SectionTitle
-        pretitle="Nextly Benefits"
-        title=" Why should you use this landing page"
+        pretitle="Why Train with Us"
+        title="Empower Yourself at JK Combat Academy"
       >
-        Nextly is a free landing page & marketing website template for startups
-        and indie projects. Its built with Next.js & TailwindCSS. And its
-        completely open-source.
+        At JK Combat Academy, we specialize in intense combat training programs
+        that help students develop not only physical prowess but also mental
+        discipline and resilience. Whether you're a beginner or an experienced
+        fighter, our programs are designed to push your limits.
       </SectionTitle>
       <Benefits data={benefitOne} />
       <Benefits imgPos="right" data={benefitTwo} />
       <SectionTitle
-        pretitle="Watch a video"
-        title="Learn how to fullfil your needs"
+        pretitle="Watch Our Training in Action"
+        title="Step Into the Combat Zone"
       >
-        This section is to highlight a promo or demo video of your product.
-        Analysts says a landing page with video has 3% more conversion rate. So,
-        don't forget to add one. Just like this.
+        Watch our combat training sessions in action, led by our experienced
+        instructors. Learn techniques that will prepare you for real-world
+        self-defense and competitive fighting.
       </SectionTitle>
       <Video />
-      <SectionTitle
-        pretitle="Testimonials"
-        title="Here's what our customers said"
+      {/* <SectionTitle
+        pretitle="What Our Fighters Say"
+        title="Testimonials from Our Combat Students"
       >
-        Testimonails is a great way to increase the brand trust and awareness.
-        Use this section to highlight your popular customers.
-      </SectionTitle>
-      <Testimonials />
-      <SectionTitle pretitle="FAQ" title="Frequently Asked Questions">
-        Answer your customers possible questions here, it will increase the
-        conversion rate as well as support or chat requests.
+        Our students have achieved incredible results in their combat journey.
+        Hear their stories and find out how JK Combat Academy has empowered them
+        to reach new heights. */}
+      {/* </SectionTitle> */}
+      {/* <Testimonials /> */}
+      <SectionTitle pretitle="FAQ" title="Questions About Combat Training?">
+        Find answers to frequently asked questions about our combat programs,
+        schedules, and memberships. Whether you're looking for personal training
+        or group classes, we have options for every fighter.
       </SectionTitle>
       <Faq />
       <Cta />

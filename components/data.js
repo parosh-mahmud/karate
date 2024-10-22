@@ -1,57 +1,60 @@
 import {
-  EmojiHappyIcon,
-  ChartSquareBarIcon,
-  CursorClickIcon,
-  DeviceMobileIcon,
-  AdjustmentsIcon,
-  SunIcon,
+  ShieldCheckIcon,
+  LightningBoltIcon,
+  UsersIcon,
+  AcademicCapIcon,
+  GlobeAltIcon,
+  FireIcon,
 } from "@heroicons/react/outline";
 
-import benefitOneImg from "../public/img/benefit-one.png";
-import benefitTwoImg from "../public/img/benefit-two.png";
+// Cloudinary image URLs
+const benefitOneImg =
+  "https://res.cloudinary.com/dpudfjkoq/image/upload/w_1000,ar_16:9,c_fill,g_auto,e_sharpen/v1729612153/IMG_8079_aaltv5.jpg";
+const benefitTwoImg =
+  "https://res.cloudinary.com/dpudfjkoq/image/upload/w_1000,ar_16:9,c_fill,g_auto,e_sharpen/v1729612173/IMG_3295_pdzfly.jpg";
 
 const benefitOne = {
-  title: "Highlight your benefits",
-  desc: "You can use this space to highlight your first benefit or a feature of your product. It can also contain an image or Illustration like in the example along with some bullet points.",
-  image: benefitOneImg,
+  title: "Why Train with JK Combat Academy",
+  desc: "At JK Combat Academy, we provide world-class combat training to help you become a skilled martial artist. Our programs are tailored to develop your strength, technique, and mental discipline, whether you’re a beginner or an experienced fighter.",
+  image: benefitOneImg, // Pass image URL as a string
   bullets: [
     {
-      title: "Understand your customers",
-      desc: "Then explain the first point breifly in one or two lines.",
-      icon: <EmojiHappyIcon />,
+      title: "Expert Instructors",
+      desc: "Learn from the best with our experienced and certified combat instructors.",
+      icon: <ShieldCheckIcon />,
     },
     {
-      title: "Improve acquisition",
-      desc: "Here you can add the next benefit point.",
-      icon: <ChartSquareBarIcon />,
+      title: "Intensive Training Programs",
+      desc: "Our training programs are designed to push your limits and ensure rapid improvement.",
+      icon: <LightningBoltIcon />,
     },
     {
-      title: "Drive customer retention",
-      desc: "This will be your last bullet point in this section.",
-      icon: <CursorClickIcon />,
+      title: "Strong Community",
+      desc: "Join a community of fighters dedicated to self-improvement and mutual support.",
+      icon: <UsersIcon />,
     },
   ],
 };
 
 const benefitTwo = {
-  title: "Offer more benefits here",
-  desc: "You can use this same layout with a flip image to highlight your rest of the benefits of your product. It can also contain an image or Illustration as above section along with some bullet points.",
-  image: benefitTwoImg,
+  title: "More Reasons to Join JK Combat Academy",
+  desc: "We focus on providing a holistic combat training experience. From modern training facilities to flexible programs, JK Combat Academy offers everything you need to excel in martial arts.",
+  image: benefitTwoImg, // Pass image URL as a string
   bullets: [
     {
-      title: "Mobile Responsive Template",
-      desc: "Nextly is designed as a mobile first responsive template.",
-      icon: <DeviceMobileIcon />,
+      title: "Comprehensive Curriculum",
+      desc: "Our curriculum covers various combat styles, including self-defense, weapon training, and fitness.",
+      icon: <AcademicCapIcon />,
     },
     {
-      title: "Powered by Next.js & TailwindCSS",
-      desc: "This template is powered by latest technologies and tools.",
-      icon: <AdjustmentsIcon />,
+      title: "Global Recognition",
+      desc: "Train with a globally recognized academy that values discipline, honor, and excellence.",
+      icon: <GlobeAltIcon />,
     },
     {
-      title: "Dark & Light Mode",
-      desc: "Nextly comes with a zero-config light & dark mode. ",
-      icon: <SunIcon />,
+      title: "Motivating Environment",
+      desc: "Our academy fosters a motivating environment to keep you inspired and goal-oriented.",
+      icon: <FireIcon />,
     },
   ],
 };
