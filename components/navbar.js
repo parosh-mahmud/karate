@@ -37,12 +37,12 @@ export default function Navbar() {
                 <div className="flex items-center justify-between w-full lg:w-auto">
                   <Link href="/">
                     <a className="flex items-center space-x-2">
-                      <img
+                      {/* <img
                         src="/logos/logo_arman.png"
                         alt="Logo"
                         className="w-10 h-auto"
-                      />
-                      <span className="text-1xl font-medium text-indigo-500 dark:text-gray-100 whitespace-nowrap">
+                      /> */}
+                      <span className="text-4xl font-bold text-indigo-600 dark:text-gray-100 tracking-wide uppercase whitespace-nowrap drop-shadow-lg font-serif">
                         JK Combat Academy
                       </span>
                     </a>
