@@ -26,7 +26,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Navbar />
+      {/* <Navbar /> */}
       <Hero />
       <BlogSection />
       <ImageGallery />
@@ -66,7 +66,7 @@ export default function Home() {
       </SectionTitle>
       <Faq />
       <Cta />
-      <Footer />
+      {/* <Footer /> */}
       <PopupWidget />
     </>
   );

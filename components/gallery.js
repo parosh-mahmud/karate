@@ -14,8 +14,8 @@ const ImageGallery = () => {
   ];
 
   return (
-    <div className="mx-auto p-6">
-      <h2 className="text-3xl font-bold text-center mb-6">Image Gallery</h2>
+    <div className="mx-auto mt-5">
+      <h2 className="text-3xl font-bold text-center mb-6">Images Gallery</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
         {imageUrls.map((url, index) => (
           <div key={index} className="relative">

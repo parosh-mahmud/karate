@@ -98,7 +98,7 @@ const BlogSection = () => {
 
             {/* Read more link at the bottom-right */}
             <a
-              href="#"
+              href="/blog"
               className="text-sm text-blue-500 hover:underline absolute bottom-4 right-4"
             >
               Read more...

@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_OPTIONS=--openssl-legacy-provider && next dev",
-     "build": "NODE_OPTIONS=--openssl-legacy-provider next build",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider next build",
     "start": "set NODE_OPTIONS=--openssl-legacy-provider && next start"
   },
   "repository": {
@@ -32,7 +32,8 @@
     "next-themes": "^0.0.14",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-hook-form": "^7.8.3"
+    "react-hook-form": "^7.8.3",
+    "react-share": "^5.1.0"
   },
   "devDependencies": {
     "@emotion/babel-plugin": "^11.3.0",
