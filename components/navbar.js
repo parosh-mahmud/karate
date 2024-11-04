@@ -18,13 +18,13 @@ export default function Navbar() {
   }, []);
 
   const navigation = [
-    "Home",
-    "Programs",
-    "Gallery",
-    "FAQ",
-    "Blog",
-    "About Me",
-    "Contact",
+    { name: "Home", href: "/" },
+    { name: "Programs", href: "/programs" },
+    { name: "Gallery", href: "/gallery" },
+    { name: "Admissions", href: "/admission/admissions" }, // Updated href
+    { name: "Blog", href: "/blog" },
+    { name: "About Me", href: "/about" },
+    { name: "Contact", href: "/contact" },
   ];
 
   return (
@@ -37,11 +37,6 @@ export default function Navbar() {
                 <div className="flex items-center justify-between w-full lg:w-auto">
                   <Link href="/">
                     <a className="flex items-center space-x-2">
-                      {/* <img
-                        src="/logos/logo_arman.png"
-                        alt="Logo"
-                        className="w-10 h-auto"
-                      /> */}
                       <span className="text-4xl font-bold text-indigo-600 dark:text-gray-100 tracking-wide uppercase whitespace-nowrap drop-shadow-lg font-serif">
                         JK Combat Academy
                       </span>
@@ -68,13 +63,13 @@ export default function Navbar() {
                   </Disclosure.Button>
                   <Disclosure.Panel className="flex flex-wrap w-full my-5 lg:hidden">
                     {navigation.map((item, index) => (
-                      <Link key={index} href="/">
+                      <Link key={index} href={item.href}>
                         <a className="w-full px-4 py-2 -ml-4 text-gray-500 rounded-md dark:text-gray-300 hover:text-indigo-500 focus:text-indigo-500 focus:bg-indigo-100 focus:outline-none dark:focus:bg-trueGray-700">
-                          {item}
+                          {item.name}
                         </a>
                       </Link>
                     ))}
-                    <Link href="/">
+                    <Link href="/get-started">
                       <a className="w-full px-6 py-2 mt-3 text-center text-white bg-indigo-600 rounded-md lg:ml-5">
                         Get Started
                       </a>
@@ -88,39 +83,22 @@ export default function Navbar() {
             <ul className="flex items-center justify-end flex-1 pt-6 list-none lg:pt-0 lg:flex">
               {navigation.map((menu, index) => (
                 <li key={index} className="mr-3 nav__item">
-                  <Link href="/">
+                  <Link href={menu.href}>
                     <a className="inline-block px-4 py-2 text-lg font-normal text-gray-800 no-underline rounded-md dark:text-gray-200 hover:text-indigo-500 focus:text-indigo-500 focus:bg-indigo-100 focus:outline-none">
-                      {menu}
+                      {menu.name}
                     </a>
                   </Link>
                 </li>
               ))}
-              <li className="relative mr-3 nav__item group">
-                <a className="inline-block px-4 py-2 text-lg font-normal text-gray-800 no-underline rounded-md dark:text-gray-200 hover:text-indigo-500 focus:text-indigo-500 focus:bg-indigo-100 focus:outline-none cursor-pointer">
-                  Resources
-                </a>
-                <div className="absolute hidden bg-white rounded-lg shadow-lg group-hover:block min-w-[160px] top-full mt-1">
-                  <Link href="/support">
-                    <a className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      Support
-                    </a>
-                  </Link>
-                  <Link href="/blog">
-                    <a className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      Blog
-                    </a>
-                  </Link>
-                  <Link href="/license">
-                    <a className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      License
-                    </a>
-                  </Link>
-                </div>
-              </li>
             </ul>
           </div>
           <div className="hidden mr-3 space-x-3 lg:flex nav__item">
-            <Link href="/">
+            <Link href="/admission/admissions">
+              <a className="px-6 py-2 text-white bg-indigo-500 rounded-md">
+                Admission
+              </a>
+            </Link>
+            <Link href="/signin">
               <a className="px-6 py-2 text-white bg-indigo-600 rounded-md md:ml-5">
                 Sign In
               </a>
