@@ -5,7 +5,7 @@ import AdjustIcon from "@mui/icons-material/Adjust";
 import BrainIcon from "@mui/icons-material/Psychology";
 import HeartIcon from "@mui/icons-material/Favorite";
 
-export default function Component() {
+export default function Component({ onEnrollClick }) {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Section */}
@@ -97,21 +97,21 @@ export default function Component() {
           </h2>
           <div className="grid md:grid-cols-3 gap-4">
             <Image
-              src="/placeholder.svg?height=300&width=400"
+              src="https://res.cloudinary.com/dpudfjkoq/image/upload/v1729612200/IMG_20221222_003514_221_acgg9h.jpg"
               alt="Training Area 1"
               width={400}
               height={300}
               className="rounded-lg"
             />
             <Image
-              src="/placeholder.svg?height=300&width=400"
+              src="https://res.cloudinary.com/dpudfjkoq/image/upload/v1729612198/IMG_9709_yk3bjm.jpg"
               alt="Training Area 2"
               width={400}
               height={300}
               className="rounded-lg"
             />
             <Image
-              src="/placeholder.svg?height=300&width=400"
+              src="https://res.cloudinary.com/dpudfjkoq/image/upload/v1729612183/IMG_8698_r2dwjg.jpg"
               alt="Training Area 3"
               width={400}
               height={300}
@@ -128,7 +128,12 @@ export default function Component() {
             Join JK Combat Academy today and embark on a journey of
             self-discovery, discipline, and empowerment.
           </p>
-          <Button variant="contained" color="secondary" size="large">
+          <Button
+            onClick={onEnrollClick}
+            variant="contained"
+            color="secondary"
+            size="large"
+          >
             Enroll Now
           </Button>
         </div>
