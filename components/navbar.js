@@ -9,7 +9,7 @@ import SignupModal from "./authModal/signupModal";
 import { auth, provider, signOut } from "../utils/firebase";
 import { onAuthStateChanged, signInWithPopup } from "firebase/auth";
 import ProfileModal from "./profileModal/profileMOdal";
-
+import { useRouter } from "next/router";
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -17,7 +17,11 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
+  const router = useRouter();
+  const openStudentDashboard = () => {
+    setIsProfileDropdownOpen(false); // Close the dropdown
+    router.push("/student"); // Navigate to the dashboard
+  };
   const openProfileModal = () => {
     setIsProfileModalOpen(true);
     setIsProfileDropdownOpen(false);
@@ -215,6 +219,12 @@ export default function Navbar() {
                       onClick={openProfileModal}
                     >
                       Profile
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={openStudentDashboard}
+                    >
+                      Student Dashboard
                     </button>
                     <button
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
