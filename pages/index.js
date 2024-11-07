@@ -28,6 +28,7 @@ export default function Home() {
 
       {/* <Navbar /> */}
       <Hero />
+      <Video />
       <BlogSection />
       <ImageGallery />
       <SectionTitle
@@ -49,7 +50,7 @@ export default function Home() {
         instructors. Learn techniques that will prepare you for real-world
         self-defense and competitive fighting.
       </SectionTitle>
-      <Video />
+
       {/* <SectionTitle
         pretitle="What Our Fighters Say"
         title="Testimonials from Our Combat Students"

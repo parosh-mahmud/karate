@@ -6,17 +6,17 @@ import { School, CheckCircle, Cancel } from "@mui/icons-material";
 export default function StudentDashboard() {
   const [admissions, setAdmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    console.log("Current User:", currentUser); // Log currentUser to ensure it’s available
+    console.log("Current User:", user); // Log user to ensure it’s available
 
-    if (currentUser) {
+    if (user) {
       const fetchData = async () => {
         setLoading(true);
         try {
-          console.log("Fetching admissions for user:", currentUser.uid);
-          const userAdmissions = await fetchAdmissionsByUser(currentUser.uid);
+          console.log("Fetching admissions for user:", user.uid);
+          const userAdmissions = await fetchAdmissionsByUser(user.uid);
           console.log("Fetched admissions:", userAdmissions); // Log the fetched admissions
           setAdmissions(userAdmissions);
         } catch (error) {
@@ -28,9 +28,9 @@ export default function StudentDashboard() {
 
       fetchData();
     } else {
-      setLoading(false); // If no currentUser, we stop loading to avoid infinite "Loading..."
+      setLoading(false); // If no user, we stop loading to avoid infinite "Loading..."
     }
-  }, [currentUser]);
+  }, [user]);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -42,7 +42,7 @@ export default function StudentDashboard() {
         <div className="flex items-center space-x-4">
           <School className="text-indigo-600 text-3xl" />
           <h2 className="text-2xl font-semibold text-gray-800">
-            Welcome to Your Dashboard, {currentUser?.displayName || "Student"}
+            Welcome to Your Dashboard, {user?.displayName || "Student"}
           </h2>
         </div>
         <p className="text-gray-600 mt-2">
