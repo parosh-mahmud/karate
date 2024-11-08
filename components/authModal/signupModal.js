@@ -8,6 +8,8 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   TextField,
@@ -16,6 +18,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  CircularProgress,
 } from "@mui/material";
 import {
   Google as GoogleIcon,
@@ -31,7 +34,7 @@ import {
   signInWithPopup,
   doc,
   setDoc,
-} from "..//../utils/firebase"; // Adjust import path as needed
+} from "../../utils/firebase";
 
 export default function SignupModal({
   open = false,
@@ -46,24 +49,42 @@ export default function SignupModal({
   const [age, setAge] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const handleGenderChange = (event) => setGender(event.target.value);
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
   const handleGoogleSignUp = async () => {
+    setIsLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
       const { user } = result;
       await saveUserData(user);
-      setUser(user); // Set user in parent component
+      setUser(user);
+      // Show success Snackbar
+      setSnackbarMessage("Signup successful!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
       onClose();
     } catch (error) {
       console.error("Google Sign Up Error:", error);
+      // Show error Snackbar
+      setSnackbarMessage("Failed to sign up with Google.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const result = await createUserWithEmailAndPassword(
         auth,
@@ -72,10 +93,20 @@ export default function SignupModal({
       );
       const { user } = result;
       await saveUserData(user);
-      setUser(user); // Set user in parent component
+      setUser(user);
+      // Show success Snackbar
+      setSnackbarMessage("Signup successful!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
       onClose();
     } catch (error) {
       console.error("Email Sign Up Error:", error);
+      // Show error Snackbar
+      setSnackbarMessage("Failed to sign up. Please try again.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,10 +119,11 @@ export default function SignupModal({
       age,
       dateOfBirth,
       gender,
-      profilePicture: user.photoURL || "default-profile.png", // Use a default profile picture if none exists
+      role: "student",
+      profilePicture: user.photoURL || "default-profile.png",
     };
     const userDoc = doc(db, "users", user.uid);
-    await setDoc(userDoc, userData);
+    await setDoc(userDoc, userData, { merge: true });
   };
 
   return (
@@ -128,8 +160,13 @@ export default function SignupModal({
                 fullWidth
                 className="mb-4"
                 onClick={handleGoogleSignUp}
+                disabled={isLoading}
               >
-                Continue with Google
+                {isLoading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  "Continue with Google"
+                )}
               </Button>
               <div className="flex space-x-4">
                 <TextField
@@ -138,6 +175,7 @@ export default function SignupModal({
                   fullWidth
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  required
                 />
                 <TextField
                   label="Last Name"
@@ -145,6 +183,7 @@ export default function SignupModal({
                   fullWidth
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  required
                 />
               </div>
               <TextField
@@ -154,8 +193,9 @@ export default function SignupModal({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              <FormControl fullWidth variant="outlined">
+              <FormControl fullWidth variant="outlined" required>
                 <InputLabel>Gender</InputLabel>
                 <Select
                   value={gender}
@@ -174,6 +214,7 @@ export default function SignupModal({
                 type="number"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
+                required
               />
               <TextField
                 label="Date of Birth"
@@ -183,6 +224,7 @@ export default function SignupModal({
                 InputLabelProps={{ shrink: true }}
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
+                required
               />
               <TextField
                 label="Password"
@@ -191,6 +233,7 @@ export default function SignupModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -207,13 +250,35 @@ export default function SignupModal({
                 color="primary"
                 fullWidth
                 className="mt-4"
+                disabled={isLoading}
               >
-                Sign Up
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Sign Up"
+                )}
               </Button>
             </form>
           </div>
         </div>
       </DialogContent>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }

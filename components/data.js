@@ -9,9 +9,9 @@ import {
 
 // Cloudinary image URLs
 const benefitOneImg =
-  "https://res.cloudinary.com/dpudfjkoq/image/upload/w_1000,ar_16:9,c_fill,g_auto,e_sharpen/v1729612153/IMG_8079_aaltv5.jpg";
+  "https://res.cloudinary.com/dpudfjkoq/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1729612153/IMG_8079_aaltv5.jpg";
 const benefitTwoImg =
-  "https://res.cloudinary.com/dpudfjkoq/image/upload/w_1000,ar_16:9,c_fill,g_auto,e_sharpen/v1729612173/IMG_3295_pdzfly.jpg";
+  "https://res.cloudinary.com/dpudfjkoq/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1729612198/IMG_9709_yk3bjm.jpg";
 
 const benefitOne = {
   title: "Why Train with JK Combat Academy",

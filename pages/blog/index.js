@@ -1,8 +1,31 @@
-import React from "react";
-import BlogCard from "../../components/blogs/blogCard";
-import blogs from "..//..//data/blogs";
+// pages/blog/index.js
+import { useState, useEffect } from "react";
+import BlogCard from "../../components/blogs/BlogCard";
+import { db } from "../../utils/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
 const BlogPage = () => {
+  const [blogs, setBlogs] = useState([]);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const blogsRef = collection(db, "blogs");
+        const q = query(blogsRef, orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const blogsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setBlogs(blogsData);
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
+
   return (
     <section className="container mx-auto px-6 py-16">
       <div className="text-center mb-12">

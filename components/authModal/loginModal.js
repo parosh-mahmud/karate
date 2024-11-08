@@ -7,14 +7,24 @@ import {
   DialogTitle,
   Button,
   TextField,
+  IconButton,
+  InputAdornment,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { Google as GoogleIcon } from "@mui/icons-material";
+import {
+  Google as GoogleIcon,
+  Visibility,
+  VisibilityOff,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import {
   auth,
   signInWithPopup,
-  GoogleAuthProvider,
+  provider,
   signInWithEmailAndPassword,
-} from "..//../utils/firebase"; // Adjust import path if needed
+} from "../../utils/firebase";
 
 export default function LoginModal({
   open = false,
@@ -24,39 +34,73 @@ export default function LoginModal({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
   const handleGoogleLogin = async () => {
+    setIsLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const { user } = result;
       setUser && setUser(user);
+      // Show success Snackbar
+      setSnackbarMessage("Login successful!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
       onClose();
     } catch (error) {
-      setError("Failed to login with Google");
       console.error("Google Login Error:", error);
+      // Show error Snackbar
+      setSnackbarMessage("Failed to login with Google.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const { user } = result;
       setUser && setUser(user);
+      // Show success Snackbar
+      setSnackbarMessage("Login successful!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
       onClose();
     } catch (error) {
-      setError("Invalid email or password");
       console.error("Email Login Error:", error);
+      // Show error Snackbar
+      setSnackbarMessage("Invalid email or password.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogContent className="p-8">
-        <DialogTitle className="text-2xl font-bold mb-6">Login</DialogTitle>
-        {error && <p className="text-red-500 text-center">{error}</p>}
+      <DialogContent className="p-8 relative">
+        <IconButton
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        >
+          <CloseIcon />
+        </IconButton>
+        <DialogTitle className="text-2xl font-bold mb-6 text-center">
+          Login
+        </DialogTitle>
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <Button
             variant="outlined"
@@ -64,8 +108,13 @@ export default function LoginModal({
             fullWidth
             className="mb-4"
             onClick={handleGoogleLogin}
+            disabled={isLoading}
           >
-            Continue with Google
+            {isLoading ? (
+              <CircularProgress size={24} />
+            ) : (
+              "Continue with Google"
+            )}
           </Button>
           <TextField
             label="Email Address"
@@ -74,14 +123,25 @@ export default function LoginModal({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
           <TextField
             label="Password"
             variant="outlined"
             fullWidth
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={togglePasswordVisibility} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             type="submit"
@@ -89,8 +149,13 @@ export default function LoginModal({
             color="primary"
             fullWidth
             className="mt-4"
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Login"
+            )}
           </Button>
         </form>
         <p className="mt-4 text-center">
@@ -102,6 +167,23 @@ export default function LoginModal({
             Sign up now!
           </button>
         </p>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+            variant="filled"
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </DialogContent>
     </Dialog>
   );
