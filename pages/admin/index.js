@@ -46,54 +46,129 @@ export default function AdminDashboard() {
 
   return (
     <AdminRoute>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
 
-        {/* Add the Write Blog Button */}
+        {/* Write Blog Button */}
         <div className="mb-6">
           <Link href="/admin/blogs/create">
-            <a className="bg-blue-500 text-white px-4 py-2 rounded-md">
+            <a className="inline-block bg-blue-500 text-white px-4 py-2 rounded-md">
               Write Blog
             </a>
           </Link>
         </div>
 
-        {/* Existing Admissions Table */}
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr>
-              <th className="py-2 border">Student ID</th>
-              <th className="py-2 border">Name</th>
-              <th className="py-2 border">Email</th>
-              <th className="py-2 border">Status</th>
-              <th className="py-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {admissions.map((admission) => (
-              <tr key={admission.id} className="text-center">
-                <td className="py-2 border">{admission.studentId || "N/A"}</td>
-                <td className="py-2 border">{admission.fullName}</td>
-                <td className="py-2 border">{admission.email}</td>
-                <td className="py-2 border">{admission.status}</td>
-                <td className="py-2 border">
-                  <button
-                    className="bg-green-500 text-white px-2 py-1 rounded-md mr-2"
-                    onClick={() => handleUpdateStatus(admission.id, "approved")}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-2 py-1 rounded-md"
-                    onClick={() => handleUpdateStatus(admission.id, "declined")}
-                  >
-                    Decline
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* Admissions List */}
+        {admissions.length > 0 ? (
+          <>
+            {/* Table for larger screens */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full bg-white border">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border">Student ID</th>
+                    <th className="py-2 px-4 border">Name</th>
+                    <th className="py-2 px-4 border">Email</th>
+                    <th className="py-2 px-4 border">Payment Method</th>
+                    <th className="py-2 px-4 border">Transaction ID</th>
+                    <th className="py-2 px-4 border">Status</th>
+                    <th className="py-2 px-4 border">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {admissions.map((admission) => (
+                    <tr key={admission.id} className="text-center">
+                      <td className="py-2 px-4 border">
+                        {admission.studentId || "N/A"}
+                      </td>
+                      <td className="py-2 px-4 border">{admission.fullName}</td>
+                      <td className="py-2 px-4 border">{admission.email}</td>
+                      <td className="py-2 px-4 border">
+                        {admission.paymentMethod}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {admission.transactionId}
+                      </td>
+                      <td className="py-2 px-4 border">{admission.status}</td>
+                      <td className="py-2 px-4 border">
+                        <div className="flex justify-center flex-wrap gap-2">
+                          <button
+                            className="bg-green-500 text-white px-2 py-1 rounded-md"
+                            onClick={() =>
+                              handleUpdateStatus(admission.id, "approved")
+                            }
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="bg-red-500 text-white px-2 py-1 rounded-md"
+                            onClick={() =>
+                              handleUpdateStatus(admission.id, "declined")
+                            }
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards for small screens */}
+            <div className="md:hidden">
+              {admissions.map((admission) => (
+                <div
+                  key={admission.id}
+                  className="bg-white shadow-md rounded-md p-4 mb-4"
+                >
+                  <p>
+                    <span className="font-semibold">Name:</span>{" "}
+                    {admission.fullName}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Email:</span>{" "}
+                    {admission.email}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Payment Method:</span>{" "}
+                    {admission.paymentMethod}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Transaction ID:</span>{" "}
+                    {admission.transactionId}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Status:</span>{" "}
+                    {admission.status}
+                  </p>
+                  {/* Action Buttons */}
+                  <div className="flex mt-2 gap-2">
+                    <button
+                      className="bg-green-500 text-white px-2 py-1 rounded-md"
+                      onClick={() =>
+                        handleUpdateStatus(admission.id, "approved")
+                      }
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-2 py-1 rounded-md"
+                      onClick={() =>
+                        handleUpdateStatus(admission.id, "declined")
+                      }
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p>No admissions found.</p>
+        )}
       </div>
     </AdminRoute>
   );

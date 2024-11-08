@@ -91,7 +91,7 @@ export default function CreateBlog() {
 
   return (
     <AdminRoute>
-      <div className="p-6">
+      <div className="p-6 mt-10">
         <h1 className="text-2xl font-bold mb-4">Create New Blog</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
