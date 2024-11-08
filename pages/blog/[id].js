@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { db } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import Head from "next/head";
+import DOMPurify from "dompurify"; // Import DOMPurify
 import {
   FacebookShareButton,
   TwitterShareButton,
@@ -45,6 +46,9 @@ const BlogDetail = () => {
 
   const shareUrl = `https://yourdomain.com/blog/${id}`; // Replace with your actual domain
 
+  // Sanitize the blog content
+  const sanitizedContent = DOMPurify.sanitize(blog.content);
+
   return (
     <>
       <Head>
@@ -57,7 +61,7 @@ const BlogDetail = () => {
         <meta property="og:description" content={blog.description} />
         <meta property="og:image" content={blog.image} />
         <meta property="og:url" content={shareUrl} />
-        <meta property="og:site_name" content="JK Combat Academy" />
+        <meta property="og:site_name" content="Your Site Name" />
 
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -78,9 +82,10 @@ const BlogDetail = () => {
           By {blog.author} •{" "}
           {new Date(blog.createdAt?.toDate()).toLocaleDateString()}
         </div>
+        {/* Render the sanitized content */}
         <div
           className="text-gray-700 mt-6"
-          dangerouslySetInnerHTML={{ __html: blog.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
         ></div>
 
         {/* Social Share Buttons */}
