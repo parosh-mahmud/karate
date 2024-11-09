@@ -37,7 +37,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-6 mt-6">
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-8">
         <div className="flex items-center space-x-4">
           <School className="text-indigo-600 text-3xl" />
