@@ -24,13 +24,13 @@ import { getStorage } from "firebase/storage"; // Import getStorage correctly he
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDm9aLKraofIHRKCH_sBXJg9ieLUSrk-78",
-  authDomain: "combat-fd364.firebaseapp.com",
-  projectId: "combat-fd364",
-  storageBucket: "combat-fd364.appspot.com",
-  messagingSenderId: "427463023275",
-  appId: "1:427463023275:web:0949d75d5bb9d7e917b5ee",
-  measurementId: "G-LJ3ZP0K8ZJ",
+  apiKey: "AIzaSyBTBFBGTvxWVvTHQc3WDW1zY4GnL2EGcjA",
+  authDomain: "jkcombat-27a89.firebaseapp.com",
+  projectId: "jkcombat-27a89",
+  storageBucket: "jkcombat-27a89.firebasestorage.app",
+  messagingSenderId: "670524633825",
+  appId: "1:670524633825:web:598e6fd1751912a244bda0",
+  measurementId: "G-DBKVCBXP5B",
 };
 
 // Initialize Firebase
