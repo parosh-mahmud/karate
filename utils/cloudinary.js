@@ -7,3 +7,5 @@ cloudinary.config({
 });
 
 export default cloudinary;
+
+// env added on vercel
