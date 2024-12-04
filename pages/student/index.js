@@ -39,120 +39,96 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-6 mt-6">
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-8">
-        <div className="flex items-center space-x-4">
-          <School className="text-indigo-600 text-3xl" />
-          <h2 className="text-2xl font-semibold text-gray-800">
-            Welcome to Your Dashboard, {user?.displayName || "Student"}
-          </h2>
-        </div>
-        <p className="text-gray-600 mt-2">
-          Here you can view your admission details and track the status of your
-          application.
-        </p>
+        <Header user={user} />
+        <AdmissionDetails admissions={admissions} />
+      </div>
+    </div>
+  );
+}
 
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold text-gray-700">
-            Admission Details
-          </h3>
-          {admissions.length > 0 ? (
-            admissions.map((admission) => (
-              <div
-                key={admission.id}
-                className="bg-gray-50 rounded-lg shadow-lg p-6 mt-4 border border-gray-200"
-              >
-                <div className="flex justify-between items-center">
-                  <h4 className="text-lg font-medium text-gray-800">
-                    Student ID: {admission.studentId}
-                  </h4>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium text-white ${
-                      admission.status === "approved"
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                    }`}
-                  >
-                    {admission.status === "approved" ? (
-                      <CheckCircle className="mr-1" />
-                    ) : (
-                      <Cancel className="mr-1" />
-                    )}
-                    {admission.status === "approved" ? "Approved" : "Pending"}
-                  </span>
-                </div>
+function Header({ user }) {
+  return (
+    <div className="flex items-center space-x-4">
+      <School className="text-indigo-600 text-3xl" />
+      <h2 className="text-2xl font-semibold text-gray-800">
+        Welcome to Your Dashboard, {user?.displayName || "Student"}
+      </h2>
+      <p className="text-gray-600 mt-2">
+        Here you can view your admission details and track the status of your
+        application.
+      </p>
+    </div>
+  );
+}
 
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm text-gray-500">Full Name</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.fullName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Father's Name</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.fatherName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Mother's Name</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.motherName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Date of Birth</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.dateOfBirth}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Mobile</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.mobile}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.email}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Address</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.presentAddress}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Nationality</p>
-                    <p className="text-md font-medium text-gray-900">
-                      {admission.nationality}
-                    </p>
-                  </div>
-                </div>
+function AdmissionDetails({ admissions }) {
+  return (
+    <div className="mt-8">
+      <h3 className="text-xl font-semibold text-gray-700">Admission Details</h3>
+      {admissions.length > 0 ? (
+        admissions.map((admission) => (
+          <StudentAdmissionCard key={admission.id} admission={admission} />
+        ))
+      ) : (
+        <p className="mt-4 text-gray-600">No admissions found for this user.</p>
+      )}
+    </div>
+  );
+}
 
-                <div className="mt-6 border-t border-gray-200 pt-4">
-                  <h5 className="text-lg font-semibold text-gray-700">
-                    Payment Details
-                  </h5>
-                  <p className="text-sm text-gray-500">Payment Method</p>
-                  <p className="text-md font-medium text-gray-900">
-                    {admission.paymentMethod}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-3">Transaction ID</p>
-                  <p className="text-md font-medium text-gray-900">
-                    {admission.transactionId}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="mt-4 text-gray-600">
-              No admissions found for this user.
-            </p>
-          )}
+function StudentAdmissionCard({ admission }) {
+  return (
+    <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-4 border border-gray-200 relative">
+      <img
+        src={admission.picture}
+        alt="Student Picture"
+        className="w-32 h-20 object-cover border border-gray-300 absolute top-4 right-4"
+      />
+      <div className="flex items-center space-x-4">
+        <div className="flex-1">
+          <h4 className="text-lg font-medium text-gray-800">
+            Student ID: {admission.studentId}
+          </h4>
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium text-white ${
+              admission.status === "approved" ? "bg-green-500" : "bg-red-500"
+            }`}
+          >
+            {admission.status === "approved" ? (
+              <CheckCircle className="mr-1" />
+            ) : (
+              <Cancel className="mr-1" />
+            )}
+            {admission.status === "approved" ? "Approved" : "Pending"}
+          </span>
         </div>
       </div>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <InfoField label="Full Name" value={admission.fullName} />
+        <InfoField label="Father's Name" value={admission.fatherName} />
+        <InfoField label="Mother's Name" value={admission.motherName} />
+        <InfoField label="Date of Birth" value={admission.dateOfBirth} />
+        <InfoField label="Mobile" value={admission.mobile} />
+        <InfoField label="Email" value={admission.email} />
+        <InfoField label="Address" value={admission.presentAddress} />
+        <InfoField label="Nationality" value={admission.nationality} />
+      </div>
+
+      <div className="mt-6 border-t border-gray-200 pt-4">
+        <h5 className="text-lg font-semibold text-gray-700">Payment Details</h5>
+        <InfoField label="Payment Method" value={admission.paymentMethod} />
+        <InfoField label="Transaction ID" value={admission.transactionId} />
+      </div>
+    </div>
+  );
+}
+
+function InfoField({ label, value }) {
+  return (
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-md font-medium text-gray-900">{value}</p>
     </div>
   );
 }

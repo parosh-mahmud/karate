@@ -1,0 +1,26 @@
+/* globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-primary text-neutral font-body;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply text-accent font-header;
+}
+
+a {
+  @apply text-accent hover:text-secondary;
+}
+
+p {
+  @apply text-neutral font-body;
+}
