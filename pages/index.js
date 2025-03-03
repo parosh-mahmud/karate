@@ -11,12 +11,13 @@ import Faq from "../components/faq";
 import Cta from "../components/cta";
 import Footer from "../components/footer";
 import PopupWidget from "../components/popupWidget";
-
+import NoticeBar from "../components/NoticeBar";
 import { benefitOne, benefitTwo } from "../components/data";
 
 export default function Home() {
   return (
     <>
+      {/* <NoticeBar /> */}
       <Head>
         <title>JK Combat Academy - Master the Art of Combat</title>
         <meta

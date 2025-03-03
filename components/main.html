@@ -1,0 +1,169 @@
+<!-- <div class="col-md-5 pay_l">
+    <div class="row">
+        <div class="col-md-12 text-center" style="margin-bottom: 10px; margin-top: 15px">
+            <img style="max-width: 150px;" src="https://payment.ivacbd.com/img/sslcommerz.png" alt="" class="">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <!-- ngIf: selected_payment.slug == null -->
+            <!-- ngIf: selected_payment.slug != null -->
+            <div class="selected_payment_option ng-scope" ng-if="selected_payment.slug != null">
+                <div class="sel_option">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="option_name ng-binding">MASTER</p>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <img ng-src="https://securepay.sslcommerz.com/gwprocess/v4/image/gw1/master.png"
+                                        alt="" class="img-responsive"
+                                        src="https://securepay.sslcommerz.com/gwprocess/v4/image/gw1/master.png">
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div><!-- end ngIf: selected_payment.slug != null -->
+        </div>
+
+    </div>
+    <ul class="list-group" style="margin-top: 10px;">
+        <li class="list-group-item ng-binding">
+            <strong class="ng-binding">FEES</strong>: 800 BDT
+        </li>
+        <li class="list-group-item ng-binding">
+            <strong class="ng-binding">Convenience Fees:</strong> 24 BDT
+        </li>
+        <li class="list-group-item ng-binding">
+            <strong class="ng-binding">Payable Amount: </strong> 824 BDT
+        </li>
+        <li class="list-group-item">
+
+            <div class="input-group ng-binding">
+                <strong class="ng-binding">Mobile No: </strong> &nbsp; 01766283131 &nbsp;&nbsp;
+                <!-- ngIf: showAppointData -->
+                <!-- ngIf: !showAppointData --><button class="btn btn-circle btn-sm btn-primary ng-scope"
+                    ng-disabled="sendOtpDisabled" type="button" ng-if="!showAppointData" ng-click="sendOtp()">
+                    <!-- ngIf: ! verifyOtp --><span ng-if="! verifyOtp" class="ng-scope">Send
+                        OTP</span><!-- end ngIf: ! verifyOtp -->
+                    <!-- ngIf: verifyOtp -->
+                </button><!-- end ngIf: !showAppointData -->
+            </div>
+        </li>
+        <!-- ngIf: verifyOtp -->
+
+    </ul>
+    <br>
+    <!-- ngIf: !showAppointData -->
+    <p class="text-danger ng-binding ng-scope" ng-if="!showAppointData">
+        You need to verify OTP first to get appointment date time
+    </p><!-- end ngIf: !showAppointData -->
+    <!-- ngIf: showAppointData -->
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label for="" class="text-uppercase ng-binding">Appointment Date</label>
+
+                <select class="form-control ng-pristine ng-untouched ng-valid ng-empty" name="appointment_date"
+                    ng-model="appointment_date" ng-change="switchAppointmentDate(payment[0],this)">
+                    <option value="" selected="selected">Select a Appointment Date</option>
+                    <!-- ngRepeat: slot in slotDates -->
+
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="" class="text-uppercase ng-binding">Appointment Time</label>
+                <input type="hidden" id="slot_id" name="slot_id" ng-model="payment[0].slot_id" value=""
+                    autocomplete="off" class="ng-pristine ng-untouched ng-valid ng-empty">
+                <!--                                                    <select name="appointment_time"  class="form-control" ng-model="payment[0].appointment_time" required >
+                                                        <option value="" >Select a Appointment Time</option>
+                                                        <option  ng-repeat="slot in slotTimes" ng-click="selectAppointmentTime(slot,payment[0],this)" value="{{ slot.hour }}">{{ slot.time_display }}</option>
+
+                                                    </select>-->
+
+                <select class="form-control ng-pristine ng-empty ng-invalid ng-invalid-required ng-touched"
+                    name="appointment_time" ng-model="appointment_time"
+                    ng-change="switchAppointmentTime(payment[0],this)" required="">
+                    <option value="" selected="selected">Select a Appointment Time</option>
+                    <!-- ngRepeat: slot in slotTimes -->
+                </select>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ngIf: false -->
+    <div class="row justify-content-center ng-hide"
+        ng-show="slotTimes.length > 0 &amp;&amp; selected_payment.slug &amp;&amp; appointment_time &amp;&amp; appointment_date">
+        <div class="col-md-12 text-center">
+            <div class="g-recaptcha" id="hash-param" data-callback="setRecaptchaTokenPay"
+                data-sitekey="6LdOCpAqAAAAAOLNB3Vwt_H7Nw4GGCAbdYm5Brsb">
+                <div style="width: 304px; height: 78px;">
+                    <div><iframe title="reCAPTCHA" width="304" height="78" role="presentation" name="a-sahyv167fn8e"
+                            frameborder="0" scrolling="no"
+                            sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation allow-modals allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
+                            src="https://www.google.com/recaptcha/api2/anchor?ar=1&amp;k=6LdOCpAqAAAAAOLNB3Vwt_H7Nw4GGCAbdYm5Brsb&amp;co=aHR0cHM6Ly9wYXltZW50Lml2YWNiZC5jb206NDQz&amp;hl=en&amp;v=p09oe8YIFfKgcnqQ9m9k4aiB&amp;size=normal&amp;cb=h98vnt6zrdic"></iframe>
+                    </div><textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response"
+                        style="width: 250px; height: 40px; border: 1px solid rgb(193, 193, 193); margin: 10px 25px; padding: 0px; resize: none; display: none;"></textarea>
+                </div><iframe style="display: none;"></iframe>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center" style="margin-top: 25px;">
+            <button class="btn btn-default ng-binding"
+                ng-disabled="!captchaVerifiedPay || selected_payment.slug == null || appointment_time == null || appointment_date == null"
+                ng-click="payNowV2()" disabled="disabled">
+                Pay Now
+            </button>
+            <p class="text-danger ng-binding">
+                Please complete your transaction within 5 minutes to get the appointment date successfully
+            </p>
+        </div>
+    </div>
+
+</div> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCAPTCHA with Manual Stylesheet</title>
+    <!-- Include reCAPTCHA styles -->
+    <link rel="stylesheet" type="text/css"
+        href="https://www.gstatic.com/recaptcha/releases/p09oe8YIFfKgcnqQ9m9k4aiB/styles__ltr.css">
+</head>
+
+<body>
+    <!-- Placeholder for reCAPTCHA -->
+    <div id="recaptcha-container" style="width: 304px; height: 78px;"></div>
+
+    <!-- Include reCAPTCHA API -->
+    <script src="https://www.google.com/recaptcha/api.js?onload=vcRecaptchaApiLoaded&render=explicit" async
+        defer></script>
+
+    <script>
+        // Callback function to render reCAPTCHA
+        function vcRecaptchaApiLoaded() {
+            grecaptcha.render('recaptcha-container', {
+                sitekey: 'your-sitekey-here', // Replace with your sitekey
+                callback: function (response) {
+                    console.log('reCAPTCHA solved. Token:', response);
+                },
+                'expired-callback': function () {
+                    console.log('reCAPTCHA expired. Solve it again.');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

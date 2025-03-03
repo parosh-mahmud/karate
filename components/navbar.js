@@ -14,10 +14,11 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // Added this line
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
   const router = useRouter();
 
   const handleScroll = () => {
@@ -67,14 +68,41 @@ export default function Navbar() {
     router.push("/student");
   };
 
+  // Navigation array with nested dropdown items
   const navigation = [
-    { name: "Home", href: "/" },
-    { name: "Programs", href: "/programs" },
-    { name: "Gallery", href: "/gallery" },
-    { name: "Admissions", href: "/admission" },
-    { name: "Blog", href: "/blog" },
-    { name: "About Me", href: "/about" },
-    { name: "Contact", href: "/contact" },
+    { name: "হোম", href: "/" },
+    {
+      name: "ভর্তি",
+      href: "/programs",
+      children: [
+        { name: "এক কালিন", href: "/programs/ek-kalin" },
+        { name: "মাসিক", href: "/programs/masik" },
+      ],
+    },
+    {
+      name: "গ্যালারি",
+      href: "/gallery",
+      children: [
+        { name: "জুডো", href: "/gallery/judo" },
+        { name: "কারাতে", href: "/gallery/karate" },
+        { name: "অনুষ্ঠান এবং অন্যান্য খেলা", href: "/gallery/events" },
+      ],
+    },
+    {
+      name: "স্পোর্টস",
+      href: "/admission",
+      children: [
+        { name: "জুডো", href: "/sports/judo" },
+        { name: "কারাতে", href: "/sports/karate" },
+        { name: "স্কেটিং", href: "/sports/skating" },
+        { name: "বিএনিসিসি", href: "/sports/bnicsi" },
+        { name: "এথলেটিস", href: "/sports/athletics" },
+        { name: "অন্যান্য", href: "/sports/others" },
+      ],
+    },
+    { name: "নিউজ", href: "/blog" },
+    { name: "কোর্সসমূহ", href: "/about" },
+    { name: "পরিচিতি", href: "/contact" },
   ];
 
   return (
@@ -97,11 +125,24 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-6">
             {navigation.map((item, index) => (
-              <Link key={index} href={item.href}>
-                <a className="text-lg font-medium text-gray-800 dark:text-gray-200 hover:text-indigo-600 transition">
-                  {item.name}
-                </a>
-              </Link>
+              <div key={index} className="relative group">
+                <Link href={item.href}>
+                  <a className="text-lg font-medium text-gray-800 dark:text-gray-200 hover:text-indigo-600 transition">
+                    {item.name}
+                  </a>
+                </Link>
+                {item.children && (
+                  <div className="absolute left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {item.children.map((child, childIndex) => (
+                      <Link key={childIndex} href={child.href}>
+                        <a className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                          {child.name}
+                        </a>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 
@@ -121,7 +162,7 @@ export default function Navbar() {
                   />
                 </button>
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-2">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-2 transition-opacity duration-200">
                     <button
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={openProfileModal}
@@ -205,61 +246,115 @@ export default function Navbar() {
         >
           <div className="bg-white dark:bg-gray-900 px-4 pt-2 pb-4 space-y-2">
             {navigation.map((item, index) => (
-              <Link key={index} href={item.href}>
-                <a
-                  className="block text-lg font-medium text-gray-800 dark:text-gray-200 hover:text-indigo-600 transition"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
-              </Link>
+              <div key={index}>
+                {item.children ? (
+                  <div>
+                    <button
+                      className="flex justify-between items-center w-full px-4 py-2 text-lg font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                      onClick={() =>
+                        setOpenMobileDropdown(
+                          openMobileDropdown === index ? null : index
+                        )
+                      }
+                    >
+                      {item.name}
+                      <svg
+                        className="w-4 h-4 ml-2 transition-transform duration-200"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        {openMobileDropdown === index ? (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 15l7-7 7 7"
+                          />
+                        ) : (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        )}
+                      </svg>
+                    </button>
+                    <div
+                      className={`ml-4 border-l pl-2 transition-all duration-300 overflow-hidden ${
+                        openMobileDropdown === index
+                          ? "max-h-screen"
+                          : "max-h-0"
+                      }`}
+                    >
+                      {item.children.map((child, childIndex) => (
+                        <Link key={childIndex} href={child.href}>
+                          <a
+                            className="block px-4 py-2 text-lg font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {child.name}
+                          </a>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Link href={item.href}>
+                    <a
+                      className="block text-lg font-medium text-gray-800 dark:text-gray-200 hover:text-indigo-600 transition"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </a>
+                  </Link>
+                )}
+              </div>
             ))}
             {user ? (
-              <>
-                <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
-                  <button
-                    onClick={openProfileModal}
-                    className="block w-full text-left px-4 py-2 text-lg font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={openStudentDashboard}
-                    className="block w-full text-left px-4 py-2 text-lg font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-                  >
-                    Student Dashboard
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-lg font-medium text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+                <button
+                  onClick={openProfileModal}
+                  className="block w-full text-left px-4 py-2 text-lg font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={openStudentDashboard}
+                  className="block w-full text-left px-4 py-2 text-lg font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                >
+                  Student Dashboard
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-lg font-medium text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                >
+                  Logout
+                </button>
+              </div>
             ) : (
-              <>
-                <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
-                  <button
-                    onClick={() => {
-                      openLoginModal();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-lg font-medium text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => {
-                      openSignupModal();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-lg font-medium text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-                  >
-                    Sign Up
-                  </button>
-                </div>
-              </>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+                <button
+                  onClick={() => {
+                    openLoginModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-lg font-medium text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    openSignupModal();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-lg font-medium text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                >
+                  Sign Up
+                </button>
+              </div>
             )}
           </div>
         </div>

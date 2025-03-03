@@ -8,7 +8,7 @@ export default function Hero() {
       <div className="w-full lg:w-1/2 mb-12 lg:mb-0">
         <h1 className="text-4xl font-extrabold leading-snug tracking-tight text-gray-800 lg:text-5xl lg:leading-tight xl:text-6xl xl:leading-tight">
           Achieve Peak Performance with{" "}
-          <span className="text-indigo-600">Karate Training!</span>
+          <span className="text-indigo-600">SELF DEFENCE!</span>
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-gray-600">
           Discover the power of karate to enhance discipline, strength, and
@@ -56,16 +56,14 @@ export default function Hero() {
         </h2>
         <div className="mt-6">
           <p className="inline-block text-lg font-semibold text-gray-700">
-            <span className="line-through text-gray-400">BDT 25,000</span>{" "}
-            <span className="text-indigo-600">BDT 21,500</span>{" "}
-            <span className="text-sm text-gray-500">
-              (use code: KARATEPOWER)
-            </span>
+            <span className="line-through text-gray-400">BDT 5000</span>{" "}
+            <span className="text-indigo-600">BDT 3000</span>{" "}
+            <span className="text-sm text-gray-500">(use code: JKCOMBAT)</span>
           </p>
         </div>
         <div className="mt-8">
           <a
-            href="#join"
+            href="/admission"
             className="px-8 py-4 text-lg font-medium text-white bg-indigo-600 rounded-md shadow hover:bg-indigo-700 transition duration-300"
           >
             Join Now

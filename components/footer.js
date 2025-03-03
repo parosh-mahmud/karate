@@ -10,14 +10,14 @@ function Footer() {
             className="h-16 w-auto mb-4"
           />
           <p className="text-sm">
-            123 Karate Street, Martial Arts District,
+            Haji Muhammad Muhsin Hall , University of Dhaka,
             <br />
-            Main City, State 12345
+            Dhaka, 1000, Bangladesh
           </p>
           <p className="text-sm mt-2">
-            <span className="font-semibold">Contact:</span> +1 (555) 123-4567
+            <span className="font-semibold">Contact:</span> +8801765622562
             <br />
-            <span className="font-semibold">Email:</span> info@karateacademy.com
+            <span className="font-semibold">Email:</span> arman.du.j2k@gmail.com
           </p>
         </div>
 
