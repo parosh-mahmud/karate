@@ -1,6 +1,4 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp, getApps } from "firebase/app";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -20,27 +18,38 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { getStorage } from "firebase/storage"; // Import getStorage correctly here
+import { getStorage } from "firebase/storage";
 
-// Firebase configuration
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBTBFBGTvxWVvTHQc3WDW1zY4GnL2EGcjA",
+//   authDomain: "jkcombat-27a89.firebaseapp.com",
+//   projectId: "jkcombat-27a89",
+//   storageBucket: "jkcombat-27a89.firebasestorage.app",
+//   messagingSenderId: "670524633825",
+//   appId: "1:670524633825:web:598e6fd1751912a244bda0",
+//   measurementId: "G-DBKVCBXP5B",
+// };
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBTBFBGTvxWVvTHQc3WDW1zY4GnL2EGcjA",
-  authDomain: "jkcombat-27a89.firebaseapp.com",
-  projectId: "jkcombat-27a89",
-  storageBucket: "jkcombat-27a89.firebasestorage.app",
-  messagingSenderId: "670524633825",
-  appId: "1:670524633825:web:598e6fd1751912a244bda0",
-  measurementId: "G-DBKVCBXP5B",
+  apiKey: "AIzaSyAEEA-dH1ae0qog8Z_vD4Fj_-aLgzrsy0Y",
+  authDomain: "nirapod-lenden.firebaseapp.com",
+  databaseURL:
+    "https://nirapod-lenden-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "nirapod-lenden",
+  storageBucket: "nirapod-lenden.firebasestorage.app",
+  messagingSenderId: "67130296684",
+  appId: "1:67130296684:web:18b0f3607979110c16cb49",
+  measurementId: "G-J2XRJJTS4C",
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// ✅ Prevent multiple initializations
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app); // Initialize storage here
+const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
-// Function to fetch admissions by user UID
 export async function fetchAdmissionsByUser(uid) {
   const admissions = [];
   try {
