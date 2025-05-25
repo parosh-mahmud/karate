@@ -25,39 +25,35 @@ import {
   provider,
   signInWithEmailAndPassword,
 } from "../../utils/firebase";
-
+import { useAuth } from "../context/AuthContext";
 export default function LoginModal({
   open = false,
   onClose = () => {},
   onSwitchToSignup = () => {},
-  setUser,
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  const { login, googleLogin } = useAuth(); // ✅ Use login methods from context
 
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const result = await signInWithPopup(auth, provider);
-      const { user } = result;
-      setUser && setUser(user);
-      // Show success Snackbar
+      await googleLogin(); // ✅ Login via context
       setSnackbarMessage("Login successful!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       onClose();
     } catch (error) {
       console.error("Google Login Error:", error);
-      // Show error Snackbar
       setSnackbarMessage("Failed to login with Google.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -70,17 +66,13 @@ export default function LoginModal({
     e.preventDefault();
     setIsLoading(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const { user } = result;
-      setUser && setUser(user);
-      // Show success Snackbar
+      await login(email, password); // ✅ Login via context
       setSnackbarMessage("Login successful!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       onClose();
     } catch (error) {
       console.error("Email Login Error:", error);
-      // Show error Snackbar
       setSnackbarMessage("Invalid email or password.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);

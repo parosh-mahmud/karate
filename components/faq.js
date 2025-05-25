@@ -1,26 +1,39 @@
+// components/Faq.js
 import React from "react";
 import Container from "./container";
 import { Disclosure } from "@headlessui/react";
+// Corrected import path for ChevronUpIcon (reverted to v1 style)
 import { ChevronUpIcon } from "@heroicons/react/solid";
 
 export default function Faq() {
   return (
-    <Container className="!p-0">
-      <div className="w-full max-w-2xl p-2 mx-auto rounded-2xl">
+    <Container className="!p-0 font-sans">
+      {" "}
+      {/* Apply base font-sans */}
+      <div className="w-full max-w-2xl p-2 mx-auto">
         {faqdata.map((item, index) => (
-          <div key={item.question} className="mb-5">
+          <div key={item.question} className="mb-4">
             <Disclosure>
               {({ open }) => (
                 <>
-                  <Disclosure.Button className="flex items-center justify-between w-full px-4 py-4 text-lg text-left text-gray-800 rounded-lg bg-gray-50 hover:bg-gray-100 focus:outline-none focus-visible:ring focus-visible:ring-indigo-100 focus-visible:ring-opacity-75 dark:bg-trueGray-800 dark:text-gray-200">
+                  <Disclosure.Button
+                    className="flex items-center justify-between w-full px-5 py-4 
+                                                text-lg text-left rounded-lg 
+                                                bg-white dark:bg-brandTextSoft 
+                                                hover:bg-slate-50 dark:hover:bg-slate-700 
+                                                text-brandTextPrimary dark:text-slate-100 
+                                                focus:outline-none focus-visible:ring-2 
+                                                focus-visible:ring-brandAccentFocus focus-visible:ring-opacity-75 
+                                                font-semibold font-header shadow-sm"
+                  >
                     <span>{item.question}</span>
                     <ChevronUpIcon
                       className={`${
                         open ? "transform rotate-180" : ""
-                      } w-5 h-5 text-indigo-500`}
+                      } w-6 h-6 text-brandAccent transition-transform duration-200`}
                     />
                   </Disclosure.Button>
-                  <Disclosure.Panel className="px-4 pt-4 pb-2 text-gray-500 dark:text-gray-300">
+                  <Disclosure.Panel className="px-5 pt-3 pb-5 text-brandTextSecondary dark:text-slate-300 font-body text-base leading-relaxed">
                     {item.answer}
                   </Disclosure.Panel>
                 </>

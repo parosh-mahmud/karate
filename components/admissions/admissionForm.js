@@ -13,7 +13,7 @@ import {
   getDoc,
   updateDoc,
   auth,
-} from "..//..//utils/firebase";
+} from "../../utils/firebase"; // Corrected path
 
 import {
   InfoOutlined,
@@ -25,38 +25,36 @@ export default function AdmissionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // State to show image preview
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0); // Note: This state needs to be updated during upload for the progress bar to reflect changes.
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset, // Added reset from react-hook-form
   } = useForm();
 
   useEffect(() => {
-    // Set up a listener for authentication state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("Current User:", user); // Log the current user to the console
-        setCurrentUser(user); // Save the current user in the state if needed
+        console.log("Current User:", user);
+        setCurrentUser(user);
       } else {
         console.log("No user is signed in");
         setCurrentUser(null);
       }
     });
-
-    // Cleanup the listener on component unmount
     return () => unsubscribe();
   }, []);
 
   const onSubmit = async (formData) => {
     if (!currentUser) {
-      alert("Please sign in to submit the form.");
+      alert("Please sign in to submit the form."); // Consider a more styled modal/toast here
       return;
     }
 
     setIsSubmitting(true);
-
+    setSubmitMessage(""); // Clear previous messages
     let imageUrl = "";
 
     try {
@@ -64,10 +62,21 @@ export default function AdmissionForm() {
         const file = formData.picture[0];
         const reader = new FileReader();
 
+        // Simulate progress for demo; replace with actual progress logic if available
+        setUploadProgress(0);
+        let currentProgress = 0;
+        const progressInterval = setInterval(() => {
+          currentProgress += 10;
+          if (currentProgress <= 100) {
+            setUploadProgress(currentProgress);
+          } else {
+            clearInterval(progressInterval);
+          }
+        }, 100); // Adjust timing for simulation
+
         const imageUploadPromise = new Promise((resolve, reject) => {
           reader.onloadend = async () => {
             const base64Image = reader.result;
-
             try {
               const response = await fetch("/api/upload", {
                 method: "POST",
@@ -78,20 +87,28 @@ export default function AdmissionForm() {
               if (response.ok) {
                 const data = await response.json();
                 imageUrl = data.url;
+                setUploadProgress(100); // Ensure progress is 100 on success
+                clearInterval(progressInterval);
                 resolve();
               } else {
+                clearInterval(progressInterval);
+                setUploadProgress(0); // Reset progress on failure
                 reject("Failed to upload image. Please try again.");
               }
             } catch (error) {
+              clearInterval(progressInterval);
+              setUploadProgress(0);
               console.error("Error uploading image:", error);
               reject("An error occurred while uploading the image.");
             }
           };
-
-          reader.onerror = () => reject("Error reading the image file.");
+          reader.onerror = () => {
+            clearInterval(progressInterval);
+            setUploadProgress(0);
+            reject("Error reading the image file.");
+          };
           reader.readAsDataURL(file);
         });
-
         await imageUploadPromise;
       }
 
@@ -102,9 +119,7 @@ export default function AdmissionForm() {
 
       const response = await fetch("/api/saveFormdata", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           formData: finalFormData,
           uid: currentUser.uid,
@@ -112,16 +127,22 @@ export default function AdmissionForm() {
       });
 
       const result = await response.json();
-      setSubmitMessage(
-        result.success
-          ? "Form submitted successfully!"
-          : "Failed to submit form. Please try again."
-      );
+      if (result.success) {
+        setSubmitMessage("Form submitted successfully!");
+        reset(); // Reset form fields on success
+        setImagePreview(null); // Clear image preview
+      } else {
+        setSubmitMessage("Failed to submit form. Please try again.");
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
-      setSubmitMessage("An error occurred. Please try again.");
+      setSubmitMessage(error.message || "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
+      if (!submitMessage.includes("successfully")) {
+        // Don't reset progress if submission failed mid-upload
+        setUploadProgress(0);
+      }
     }
   };
 
@@ -130,35 +151,41 @@ export default function AdmissionForm() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result); // Set preview image
+        setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+      setUploadProgress(0); // Reset progress when a new file is selected
+      setSubmitMessage(""); // Clear submission message
+    } else {
+      setImagePreview(null);
     }
   };
 
+  const commonInputClassName =
+    "mt-1 block w-full border border-trueGray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-brandBlue sm:text-sm font-body";
+  const labelClassName = "block text-sm font-medium text-primary font-body";
+  const errorClassName = "mt-2 text-sm text-brandRed font-body";
+
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-neutral py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-extrabold text-primary sm:text-4xl font-header">
             JK Combat Academy Admission Form
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-trueGray-700 font-body">
             Join our elite training program and unleash your potential
           </p>
         </div>
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="bg-white shadow-xl overflow-hidden sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6 md:p-8">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
               {/* Left Section - Form Fields */}
               <div>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Existing Form Fields */}
+                  {/* Form Fields */}
                   <div>
-                    <label
-                      htmlFor="fullName"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="fullName" className={labelClassName}>
                       Full Name
                     </label>
                     <input
@@ -167,20 +194,17 @@ export default function AdmissionForm() {
                       {...register("fullName", {
                         required: "Full name is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.fullName && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.fullName.message}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="fatherName"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="fatherName" className={labelClassName}>
                       Father's Name
                     </label>
                     <input
@@ -189,20 +213,17 @@ export default function AdmissionForm() {
                       {...register("fatherName", {
                         required: "Father's name is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.fatherName && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.fatherName.message}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="motherName"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="motherName" className={labelClassName}>
                       Mother's Name
                     </label>
                     <input
@@ -211,21 +232,17 @@ export default function AdmissionForm() {
                       {...register("motherName", {
                         required: "Mother's name is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.motherName && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.motherName.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Present Address */}
                   <div>
-                    <label
-                      htmlFor="presentAddress"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="presentAddress" className={labelClassName}>
                       Present Address
                     </label>
                     <input
@@ -234,20 +251,19 @@ export default function AdmissionForm() {
                       {...register("presentAddress", {
                         required: "Present address is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.presentAddress && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.presentAddress.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Permanent Address */}
                   <div>
                     <label
                       htmlFor="permanentAddress"
-                      className="block text-sm font-medium text-gray-700"
+                      className={labelClassName}
                     >
                       Permanent Address
                     </label>
@@ -257,21 +273,17 @@ export default function AdmissionForm() {
                       {...register("permanentAddress", {
                         required: "Permanent address is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.permanentAddress && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.permanentAddress.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Mobile */}
                   <div>
-                    <label
-                      htmlFor="mobile"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="mobile" className={labelClassName}>
                       Mobile
                     </label>
                     <input
@@ -281,25 +293,20 @@ export default function AdmissionForm() {
                         required: "Mobile number is required",
                         pattern: {
                           value: /^[0-9]{10,15}$/,
-                          message: "Invalid mobile number format",
+                          message:
+                            "Invalid mobile number format (10-15 digits)",
                         },
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                       placeholder="Enter your mobile number"
                     />
                     {errors.mobile && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {errors.mobile.message}
-                      </p>
+                      <p className={errorClassName}>{errors.mobile.message}</p>
                     )}
                   </div>
 
-                  {/* Email */}
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="email" className={labelClassName}>
                       Email
                     </label>
                     <input
@@ -313,22 +320,16 @@ export default function AdmissionForm() {
                           message: "Invalid email format",
                         },
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                       placeholder="Enter your email address"
                     />
                     {errors.email && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {errors.email.message}
-                      </p>
+                      <p className={errorClassName}>{errors.email.message}</p>
                     )}
                   </div>
 
-                  {/* Date of Birth */}
                   <div>
-                    <label
-                      htmlFor="dateOfBirth"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="dateOfBirth" className={labelClassName}>
                       Date of Birth
                     </label>
                     <input
@@ -337,21 +338,17 @@ export default function AdmissionForm() {
                       {...register("dateOfBirth", {
                         required: "Date of birth is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.dateOfBirth && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.dateOfBirth.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Gender */}
                   <div>
-                    <label
-                      htmlFor="gender"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="gender" className={labelClassName}>
                       Gender
                     </label>
                     <select
@@ -359,7 +356,7 @@ export default function AdmissionForm() {
                       {...register("gender", {
                         required: "Gender is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     >
                       <option value="">Select gender</option>
                       <option value="male">Male</option>
@@ -367,18 +364,12 @@ export default function AdmissionForm() {
                       <option value="other">Other</option>
                     </select>
                     {errors.gender && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {errors.gender.message}
-                      </p>
+                      <p className={errorClassName}>{errors.gender.message}</p>
                     )}
                   </div>
 
-                  {/* Profession */}
                   <div>
-                    <label
-                      htmlFor="profession"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="profession" className={labelClassName}>
                       Profession
                     </label>
                     <input
@@ -387,21 +378,17 @@ export default function AdmissionForm() {
                       {...register("profession", {
                         required: "Profession is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.profession && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.profession.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Blood Group */}
                   <div>
-                    <label
-                      htmlFor="bloodGroup"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="bloodGroup" className={labelClassName}>
                       Blood Group
                     </label>
                     <select
@@ -409,7 +396,7 @@ export default function AdmissionForm() {
                       {...register("bloodGroup", {
                         required: "Blood group is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     >
                       <option value="">Select blood group</option>
                       <option value="A+">A+</option>
@@ -422,18 +409,14 @@ export default function AdmissionForm() {
                       <option value="AB-">AB-</option>
                     </select>
                     {errors.bloodGroup && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.bloodGroup.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Nationality */}
                   <div>
-                    <label
-                      htmlFor="nationality"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="nationality" className={labelClassName}>
                       Nationality
                     </label>
                     <input
@@ -442,21 +425,17 @@ export default function AdmissionForm() {
                       {...register("nationality", {
                         required: "Nationality is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.nationality && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.nationality.message}
                       </p>
                     )}
                   </div>
 
-                  {/* NID */}
                   <div>
-                    <label
-                      htmlFor="nid"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="nid" className={labelClassName}>
                       National ID (NID)
                     </label>
                     <input
@@ -466,24 +445,21 @@ export default function AdmissionForm() {
                         required: "National ID is required",
                         pattern: {
                           value: /^[0-9]{10,17}$/,
-                          message: "Invalid NID format",
+                          message: "Invalid NID format (10-17 digits)",
                         },
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                       placeholder="Enter your NID number"
                     />
                     {errors.nid && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {errors.nid.message}
-                      </p>
+                      <p className={errorClassName}>{errors.nid.message}</p>
                     )}
                   </div>
 
-                  {/* Birth Certificate */}
                   <div>
                     <label
                       htmlFor="birthCertificate"
-                      className="block text-sm font-medium text-gray-700"
+                      className={labelClassName}
                     >
                       Birth Certificate Number
                     </label>
@@ -493,22 +469,18 @@ export default function AdmissionForm() {
                       {...register("birthCertificate", {
                         required: "Birth certificate number is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                       placeholder="Enter your birth certificate number"
                     />
                     {errors.birthCertificate && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.birthCertificate.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Religion */}
                   <div>
-                    <label
-                      htmlFor="religion"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="religion" className={labelClassName}>
                       Religion
                     </label>
                     <input
@@ -517,69 +489,55 @@ export default function AdmissionForm() {
                       {...register("religion", {
                         required: "Religion is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     />
                     {errors.religion && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.religion.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Image Upload */}
                   <div>
-                    <label
-                      htmlFor="picture"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="picture" className={labelClassName}>
                       Upload Picture
                     </label>
                     <input
                       type="file"
                       id="picture"
                       {...register("picture")}
-                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                      onChange={(e) => {
-                        handleImageUpload(e);
-                        setUploadProgress(0); // Reset progress when selecting a new file
-                      }}
+                      accept="image/*"
+                      className="mt-1 block w-full text-sm text-trueGray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brandBlue/10 file:text-brandBlue hover:file:bg-brandBlue/20 cursor-pointer font-body"
+                      onChange={handleImageUpload}
                     />
                     {errors.picture && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {errors.picture.message}
-                      </p>
+                      <p className={errorClassName}>{errors.picture.message}</p>
                     )}
 
-                    {/* Display Image Preview */}
                     {imagePreview && (
-                      <div className="mt-2">
+                      <div className="mt-4">
                         <img
                           src={imagePreview}
                           alt="Image Preview"
-                          className="w-32 h-32 object-cover rounded-md"
+                          className="w-32 h-32 object-cover rounded-md border border-trueGray-300"
                         />
                       </div>
                     )}
 
-                    {/* Display Upload Progress */}
-                    {isSubmitting && (
-                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                        <div
-                          className="bg-blue-600 h-2.5 rounded-full"
-                          style={{ width: `${uploadProgress}%` }}
-                        ></div>
-                      </div>
-                    )}
+                    {isSubmitting &&
+                      formData.picture &&
+                      formData.picture[0] && ( // Only show progress if a picture is being submitted
+                        <div className="mt-4 w-full bg-trueGray-200 rounded-full h-2.5">
+                          <div
+                            className="bg-brandBlue h-2.5 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                      )}
                   </div>
 
-                  {/* Additional form fields here */}
-
-                  {/* Payment Method Selection */}
                   <div>
-                    <label
-                      htmlFor="paymentMethod"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="paymentMethod" className={labelClassName}>
                       Payment Method
                     </label>
                     <select
@@ -587,25 +545,21 @@ export default function AdmissionForm() {
                       {...register("paymentMethod", {
                         required: "Please select a payment method",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                     >
                       <option value="">Select a payment method</option>
                       <option value="Bkash">Bkash</option>
                       <option value="Nagad">Nagad</option>
                     </select>
                     {errors.paymentMethod && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.paymentMethod.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Transaction ID Field */}
                   <div>
-                    <label
-                      htmlFor="transactionId"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="transactionId" className={labelClassName}>
                       Transaction ID
                     </label>
                     <input
@@ -614,11 +568,11 @@ export default function AdmissionForm() {
                       {...register("transactionId", {
                         required: "Transaction ID is required",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={commonInputClassName}
                       placeholder="Enter your transaction ID"
                     />
                     {errors.transactionId && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={errorClassName}>
                         {errors.transactionId.message}
                       </p>
                     )}
@@ -628,58 +582,77 @@ export default function AdmissionForm() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                      className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-neutral bg-secondary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-60 disabled:cursor-not-allowed font-header transition-colors duration-300"
                     >
                       {isSubmitting ? "Submitting..." : "Submit Application"}
                     </button>
                   </div>
                 </form>
                 {submitMessage && (
-                  <div className="mt-4 p-4 bg-green-100 rounded-md">
-                    <p className="text-green-700">{submitMessage}</p>
+                  <div
+                    className={`mt-6 p-4 rounded-md text-center ${
+                      submitMessage.includes("successfully")
+                        ? "bg-brandGreen/20 text-emerald-800"
+                        : "bg-brandRed/10 text-brandRed"
+                    }`}
+                  >
+                    <p className="font-medium font-body">{submitMessage}</p>
                   </div>
                 )}
               </div>
 
               {/* Right Section - Payment Instructions */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <div className="bg-trueGray-50 p-6 rounded-lg lg:sticky lg:top-12">
+                {" "}
+                {/* Made sticky for better UX on larger screens */}
+                <h3 className="text-xl font-semibold text-primary mb-6 font-header">
                   Important Information
                 </h3>
-                <ul className="space-y-4">
+                <ul className="space-y-6">
                   <li className="flex items-start">
-                    <InfoOutlined className="flex-shrink-0 h-6 w-6 text-indigo-600 mr-2" />
-                    <p className="text-sm text-gray-600">
+                    <InfoOutlined className="flex-shrink-0 h-6 w-6 text-brandBlue mr-3 mt-0.5" />
+                    <p className="text-sm text-trueGray-700 font-body">
                       Please ensure all information provided is accurate and
                       up-to-date. Incomplete applications may delay the
                       admission process.
                     </p>
                   </li>
                   <li className="flex items-start">
-                    <PaymentOutlined className="flex-shrink-0 h-6 w-6 text-indigo-600 mr-2" />
-                    <p className="text-sm text-gray-600">
+                    <PaymentOutlined className="flex-shrink-0 h-6 w-6 text-brandBlue mr-3 mt-0.5" />
+                    <div className="text-sm text-trueGray-700 font-body">
+                      <p className="font-semibold text-primary mb-1">
+                        Payment Details:
+                      </p>
                       To complete the application, please send a non-refundable
-                      application fee of BDT 21500 via <b>Bkash</b> or{" "}
-                      <b>Nagad</b> to the number <b>01985540923</b>.
-                      <br />
-                      <b>Instructions:</b> Send the amount, then note down the
-                      transaction ID. Enter this transaction ID in the form.
-                    </p>
+                      application fee of{" "}
+                      <strong className="text-primary">BDT 21500</strong> via{" "}
+                      <strong className="text-primary">Bkash</strong> or{" "}
+                      <strong className="text-primary">Nagad</strong> to the
+                      number{" "}
+                      <strong className="text-secondary">01985540923</strong>.
+                      <br /> <br />
+                      <strong className="text-primary">
+                        Instructions:
+                      </strong>{" "}
+                      Send the amount, then note down the transaction ID. Enter
+                      this transaction ID in the form.
+                    </div>
                   </li>
                   <li className="flex items-start">
-                    <SchoolOutlined className="flex-shrink-0 h-6 w-6 text-indigo-600 mr-2" />
-                    <p className="text-sm text-gray-600">
+                    <SchoolOutlined className="flex-shrink-0 h-6 w-6 text-brandBlue mr-3 mt-0.5" />
+                    <p className="text-sm text-trueGray-700 font-body">
                       Course details and schedules will be provided upon
                       successful application. Be prepared for an intensive
                       training regimen.
                     </p>
                   </li>
                 </ul>
-                <div className="mt-6 p-4 bg-yellow-50 rounded-md">
-                  <h4 className="text-sm font-medium text-yellow-800 mb-2">
+                <div className="mt-8 p-4 bg-accent/10 rounded-md border border-accent/30">
+                  <h4 className="text-base font-semibold text-amber-800 mb-2 font-header flex items-center">
+                    <InfoOutlined className="h-5 w-5 mr-2 text-amber-700" />
                     Health Notice
                   </h4>
-                  <p className="text-sm text-yellow-700">
+                  <p className="text-sm text-amber-700 font-body">
                     Applicants must be in good physical condition. A medical
                     clearance may be required before starting the program.
                   </p>

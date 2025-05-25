@@ -1,31 +1,22 @@
-// components/admin/AdminLayout.js
+// components/admin/AdminLayout.jsx
 import React from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import AdminRoute from "../adminroutes/adminRoutes"; // Import your route protection
 
-const AdminLayout = ({ children }) => {
+export default function AdminLayout({ children }) {
   return (
-    // Use AdminRoute to protect the entire layout
-    <AdminRoute>
-      <div className="flex h-screen bg-gray-100">
-        {/* Sidebar */}
-        <Sidebar />
+    <div className="flex h-screen overflow-hidden">
+      {/* fixed-width sidebar on the left */}
+      <Sidebar />
 
-        {/* Content Area */}
-        <div className="flex-1 flex flex-col ml-64">
-          {" "}
-          {/* Adjust ml value to match sidebar width */}
-          {/* Header */}
-          <Header />
-          {/* Main Page Content */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            {children} {/* Where the page content will be rendered */}
-          </main>
-        </div>
+      {/* main area: header + scrollable content */}
+      <div className="flex-1 flex flex-col ml-64">
+        {/* top header */}
+        <Header />
+
+        {/* page content */}
+        <main className="flex-1 overflow-auto bg-gray-100 p-6">{children}</main>
       </div>
-    </AdminRoute>
+    </div>
   );
-};
-
-export default AdminLayout;
+}

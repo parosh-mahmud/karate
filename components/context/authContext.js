@@ -1,5 +1,5 @@
 // context/AuthContext.js
-"use client"; // Mark as client component
+"use client";
 
 import React, {
   createContext,
@@ -9,117 +9,94 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-
 import {
   auth,
-  provider, // Assuming Google provider is defined in firebase.js
+  provider,
   db,
   signInWithPopup,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, // Add for signup functionality
+  createUserWithEmailAndPassword,
   signOut,
-} from "../../utils/firebase"; // Adjust path if necessary
+} from "../../utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore"; // Import setDoc for potential role setting on signup
-import { CircularProgress, Box } from "@mui/material"; // For loading indicator
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { CircularProgress, Box } from "@mui/material";
 
-// Define the shape of the context data (optional but good practice)
 const AuthContext = createContext({
-  currentUser: null, // Changed from 'user'
+  currentUser: null,
   role: null,
   loading: true,
-  login: async (email, password) => {},
+  login: async () => {},
   googleLogin: async () => {},
-  signup: async (email, password, additionalData) => {}, // Added signup
+  signup: async () => {},
   logout: async () => {},
 });
 
-// Create the provider component
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null); // Renamed state
+  const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true); // Start loading until auth state is verified
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, async (userAuth) => {
-      setLoading(true); // Start loading when auth state might be changing
-      if (userAuth) {
-        setCurrentUser(userAuth); // Set the Firebase user object
-        // Fetch user role from Firestore
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
+      if (user) {
+        setCurrentUser(user);
+        // fetch or default role
         try {
-          const userDocRef = doc(db, "users", userAuth.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setRole(userDoc.data().role || "student"); // Default to student if role field is missing
-          } else {
-            console.warn(
-              `User document missing for UID: ${userAuth.uid}. Defaulting role to 'student'.`
-            );
-            // Optionally create the user document here if it's expected after signup
-            setRole("student"); // Default role
-          }
-        } catch (error) {
-          console.error("Error fetching user role:", error);
-          setRole(null); // Indicate role fetch failed
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          setRole(userDoc.exists() ? userDoc.data().role : "student");
+        } catch {
+          setRole("student");
         }
       } else {
-        // User is signed out
         setCurrentUser(null);
         setRole(null);
       }
-      setLoading(false); // Finished checking auth state and fetching role
+      setLoading(false);
     });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs only once
-
-  // --- Authentication Functions ---
-  // Wrap functions in useCallback to maintain stable references unless dependencies change
-  // This is often unnecessary for context but good practice if passed down deeply
-
-  const login = useCallback(async (email, password) => {
-    // Let the calling component handle errors, just return the promise
-    return signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged will update the context state automatically
+    return unsubscribe;
   }, []);
 
+  // Email/password login
+  const login = useCallback(async (email, pw) => {
+    await signInWithEmailAndPassword(auth, email, pw);
+    // onAuthStateChanged will update currentUser
+  }, []);
+
+  // Google popup login
   const googleLogin = useCallback(async () => {
-    return signInWithPopup(auth, provider);
-    // onAuthStateChanged will update the context state automatically
-  }, []);
-
-  // Example Signup function
-  const signup = useCallback(async (email, password, additionalData = {}) => {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
-    // Create user document in Firestore after successful signup
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    // ensure Firestore user doc exists
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
         uid: user.uid,
         email: user.email,
-        role: "student", // Default role on signup
+        role: "student",
+        profilePicture: user.photoURL,
         createdAt: new Date(),
-        ...additionalData, // Include any extra data like displayName if provided
       });
-      // Role will be picked up by onAuthStateChanged listener shortly after
     }
-    return userCredential; // Return the credential object
   }, []);
 
-  const logout = useCallback(async () => {
-    return signOut(auth);
-    // onAuthStateChanged will update the context state automatically
+  // Email/signup + Firestore write
+  const signup = useCallback(async (email, pw, additionalData = {}) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    const user = cred.user;
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      email: user.email,
+      role: "student",
+      createdAt: new Date(),
+      ...additionalData,
+    });
   }, []);
 
-  // Memoize the context value to prevent unnecessary re-renders of consumers
-  // when the provider's parent re-renders.
+  const logout = useCallback(() => signOut(auth), []);
+
   const value = useMemo(
     () => ({
       currentUser,
@@ -131,11 +108,9 @@ export function AuthProvider({ children }) {
       logout,
     }),
     [currentUser, role, loading, login, googleLogin, signup, logout]
-  ); // Add functions to dependency array
+  );
 
-  // Render loading indicator until initial auth check is complete
   if (loading && typeof window !== "undefined") {
-    // Check for window to avoid SSR issues if any
     return (
       <Box
         sx={{
@@ -150,15 +125,11 @@ export function AuthProvider({ children }) {
     );
   }
 
-  // Provide the context value to children components
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook to easily consume the context in other components
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
+  return ctx;
 }

@@ -1,4 +1,3 @@
-// components/blogs/BlogCard.js
 import Link from "next/link";
 
 const BlogCard = ({ blog }) => {
@@ -12,8 +11,11 @@ const BlogCard = ({ blog }) => {
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-2">{blog.title}</h2>
         <p className="text-gray-600 mb-4">{blog.description}</p>
-        <Link href={`/blog/${blog.id}`}>
-          <a className="text-indigo-600 hover:text-indigo-800">Read more</a>
+        <Link
+          href={`/blog/${blog.id}`}
+          className="text-indigo-600 hover:text-indigo-800"
+        >
+          Read more
         </Link>
       </div>
     </div>

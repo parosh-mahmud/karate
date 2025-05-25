@@ -1,5 +1,6 @@
-module.exports = {
-  presets: [
+{
+  ("presets");
+  [
     [
       "next/babel",
       {
@@ -10,9 +11,6 @@ module.exports = {
       },
     ],
   ],
-  plugins: [
-    "@emotion/babel-plugin",
-    "babel-plugin-twin",
-    "babel-plugin-macros",
-  ],
-};
+    "plugins";
+  ["@emotion/babel-plugin"];
+}
