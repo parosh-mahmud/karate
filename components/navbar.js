@@ -9,7 +9,7 @@ import LoginModal from "./authModal/loginModal";
 import SignupModal from "./authModal/signupModal";
 import ProfileModal from "./profileModal/profileMOdal";
 import Image from "next/image";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "@/components/context/AuthContext"; // Updated path
 import logo from "../assets/logos/Arman.png";
 import { useCartState } from "./context/CartContext";
 

@@ -25,7 +25,7 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/components/context/AuthContext";
 
 export default function SignupModal({ open = false, onClose = () => {} }) {
   const { signup, googleLogin } = useAuth();

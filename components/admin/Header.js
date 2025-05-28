@@ -1,6 +1,6 @@
 // components/admin/Header.js
 import React from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../components/context/AuthContext";
 import { useRouter } from "next/router";
 
 const Header = () => {
