@@ -32,24 +32,32 @@
 
 // module.exports = nextConfig;
 
+// next.config.js
+const path = require("path"); // Import the 'path' module
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     domains: ["storage.googleapis.com", "firebasestorage.googleapis.com"],
-    unoptimized: true,
+    // unoptimized: true, // Consider setting to false for Vercel's Image Optimization unless you have specific reasons
   },
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
   },
-  output: "standalone",
+  // output: "standalone", // For typical Vercel deployments, this is often not needed.
+  // If you're not using Docker for Vercel, you can likely remove this.
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@": ".",
+      // Use path.resolve to ensure an absolute path to the project root
+      "@": path.resolve(__dirname),
     };
     return config;
   },
+  // swcMinify is true by default in recent Next.js versions.
+  // Remove this line if it's causing the "Unrecognized key" warning.
+  // swcMinify: true,
 };
 
 module.exports = nextConfig;
