@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAdmissionsByUser } from "../../utils/firebase";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "@/context/AuthContext";
 import { School, CheckCircle, Cancel } from "@mui/icons-material";
 
 export default function StudentDashboard() {
