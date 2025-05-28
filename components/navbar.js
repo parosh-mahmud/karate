@@ -9,9 +9,9 @@ import LoginModal from "./authModal/loginModal";
 import SignupModal from "./authModal/signupModal";
 import ProfileModal from "./profileModal/profileMOdal";
 import Image from "next/image";
-import { useAuth } from "@/components/context/AuthContext"; // Updated path
+import { useAuth } from "@/context/AuthContext"; // Updated path
 import logo from "../assets/logos/Arman.png";
-import { useCartState } from "./context/CartContext";
+import { useCartState } from "../context/CartContext";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);

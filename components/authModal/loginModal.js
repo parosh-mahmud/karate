@@ -25,7 +25,7 @@ import {
   provider,
   signInWithEmailAndPassword,
 } from "../../utils/firebase";
-import { useAuth } from "@/components/context/AuthContext"; // Updated path
+import { useAuth } from "@/context/AuthContext"; // Updated path
 export default function LoginModal({
   open = false,
   onClose = () => {},

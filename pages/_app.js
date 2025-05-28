@@ -63,7 +63,7 @@ import { ThemeProvider } from "next-themes";
 import "../css/tailwind.css";
 import dynamic from "next/dynamic";
 import Layout from "../components/layout"; // Default layout
-import { CartProvider } from "@/components/context/CartContext";
+import { CartProvider } from "@/context/CartContext";
 // 1. Import fonts from next/font
 import { Inter, Poppins, Lato, Montserrat } from "next/font/google";
 
@@ -94,8 +94,7 @@ const montserrat = Montserrat({
 
 // 3. Dynamically import AuthProvider with SSR disabled and CORRECTED PATH
 const AuthProvider = dynamic(
-  () =>
-    import("@/components/context/AuthContext").then((mod) => mod.AuthProvider), // Corrected path
+  () => import("@/context/AuthContext").then((mod) => mod.AuthProvider), // Corrected path
   { ssr: false }
 );
 

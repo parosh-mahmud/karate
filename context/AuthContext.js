@@ -134,52 +134,163 @@
 //   return ctx;
 // }
 
-import { createContext, useContext, useState, useEffect } from "react";
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   signInWithEmailAndPassword,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { auth } from "../../lib/firebase"; // Adjust path based on your firebase config location
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, provider, db } from "@/lib/firebase";
+import { CircularProgress, Box } from "@mui/material";
 
-const AuthContext = createContext();
+const AuthContext = createContext({
+  currentUser: null,
+  role: null,
+  loading: true,
+  login: async () => {},
+  googleLogin: async () => {},
+  signup: async () => {},
+  logout: async () => {},
+});
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        if (user) {
+          setCurrentUser(user);
+          // Fetch user role from Firestore
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          setRole(userDoc.exists() ? userDoc.data().role : "student");
+        } else {
+          setCurrentUser(null);
+          setRole(null);
+        }
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        setRole("student"); // Fallback role
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
-  };
+  }, []);
 
-  const logout = async () => {
-    setUser(null);
-    return signOut(auth);
-  };
+  const googleLogin = useCallback(async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-  };
+      // Create/update user document in Firestore
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          role: "student",
+          profilePicture: user.photoURL,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    } catch (error) {
+      console.error("Google login error:", error);
+      throw error;
+    }
+  }, []);
+
+  const signup = useCallback(async (email, password, additionalData = {}) => {
+    try {
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = credential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        role: "student",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...additionalData,
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+      setRole(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      throw error;
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      currentUser,
+      role,
+      loading,
+      login,
+      googleLogin,
+      signup,
+      logout,
+    }),
+    [currentUser, role, loading, login, googleLogin, signup, logout]
   );
+
+  if (loading && typeof window !== "undefined") {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

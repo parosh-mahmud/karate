@@ -470,7 +470,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useCartDispatch } from "../../components/context/CartContext"; // Assuming path is correct
+import { useCartDispatch } from "../../context/CartContext"; // Assuming path is correct
 
 // --- Helper Components ---
 const LoadingState = () => (
