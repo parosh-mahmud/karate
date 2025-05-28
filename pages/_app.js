@@ -36,7 +36,7 @@ const montserrat = Montserrat({
 // 3. Dynamically import AuthProvider with SSR disabled
 const AuthProvider = dynamic(
   () =>
-    import("../components/context/AuthContext").then((mod) => mod.AuthProvider),
+    import("./components/context/AuthContext").then((mod) => mod.AuthProvider),
   { ssr: false }
 );
 
