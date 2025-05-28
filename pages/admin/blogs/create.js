@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { db } from "../../../utils/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
-import AdminRoute from "../../../components/adminroutes/adminRoutes";
+// import AdminRoute from "../../../components/adminroutes/adminRoutes";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css"; // Ensure the correct path
@@ -90,91 +90,91 @@ export default function CreateBlog() {
   };
 
   return (
-    <AdminRoute>
-      <div className="p-6 mt-10">
-        <h1 className="text-2xl font-bold mb-4">Create New Blog</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-            />
-          </div>
+    // <AdminRoute>
+    <div className="p-6 mt-10">
+      <h1 className="text-2xl font-bold mb-4">Create New Blog</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Title
+          </label>
+          <input
+            type="text"
+            name="title"
+            required
+            value={formData.title}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+          />
+        </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              name="description"
-              required
-              value={formData.description}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-            ></textarea>
-          </div>
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <textarea
+            name="description"
+            required
+            value={formData.description}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+          ></textarea>
+        </div>
 
-          {/* Content */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Content
-            </label>
-            <ReactQuill
-              value={formData.content}
-              onChange={handleContentChange}
-              className="mt-1"
-              theme="snow"
-            />
-          </div>
+        {/* Content */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Content
+          </label>
+          <ReactQuill
+            value={formData.content}
+            onChange={handleContentChange}
+            className="mt-1"
+            theme="snow"
+          />
+        </div>
 
-          {/* Author */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Author
-            </label>
-            <input
-              type="text"
-              name="author"
-              required
-              value={formData.author}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-            />
-          </div>
+        {/* Author */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Author
+          </label>
+          <input
+            type="text"
+            name="author"
+            required
+            value={formData.author}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+          />
+        </div>
 
-          {/* Image */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Featured Image
-            </label>
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={handleChange}
-              className="mt-1 block w-full text-sm text-gray-500"
-            />
-          </div>
+        {/* Image */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Featured Image
+          </label>
+          <input
+            type="file"
+            name="image"
+            accept="image/*"
+            onChange={handleChange}
+            className="mt-1 block w-full text-sm text-gray-500"
+          />
+        </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-green-500 text-white px-4 py-2 rounded-md"
-          >
-            {isSubmitting ? "Submitting..." : "Create Blog"}
-          </button>
-        </form>
-      </div>
-    </AdminRoute>
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-green-500 text-white px-4 py-2 rounded-md"
+        >
+          {isSubmitting ? "Submitting..." : "Create Blog"}
+        </button>
+      </form>
+    </div>
+    // </AdminRoute>
   );
 }

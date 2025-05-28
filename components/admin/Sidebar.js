@@ -2,23 +2,32 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import Image from "next/image"; // For potential logo
 import {
   HomeIcon,
   NewspaperIcon,
   PhotographIcon,
   UserGroupIcon,
-  PencilAltIcon,
-  UserAddIcon,
-} from "@heroicons/react/outline"; // Assuming Heroicons v1 based on your provided code
+  PencilAltIcon, // For Write Blog
+  UsersIcon, // Changed from UserGroupIcon for Trainers for slight differentiation
+  UserAddIcon, // For Add Trainer
+  CubeIcon, // Example for Products
+  ShoppingCartIcon, // Example for Orders
+  CogIcon, // Example for Settings
+} from "@heroicons/react/outline"; // Heroicons v1 (outline style)
 
+// Define navigation items, including new ones for Products and Orders
 const navItems = [
   { name: "Dashboard", href: "/admin", icon: HomeIcon },
-  { name: "Admissions", href: "/admin/admissions", icon: UserGroupIcon },
+  { name: "Products", href: "/admin/products", icon: CubeIcon }, // New
+  { name: "Orders", href: "/admin/orders", icon: ShoppingCartIcon }, // New
+  { name: "Admissions", href: "/admin/admissions", icon: UserGroupIcon }, // Kept UserGroupIcon for consistency
   { name: "Gallery", href: "/admin/gallery", icon: PhotographIcon },
   { name: "Blog Posts", href: "/admin/blogs", icon: NewspaperIcon },
-  { name: "Write Blog", href: "/admin/blogs/create", icon: PencilAltIcon },
-  { name: "Trainers", href: "/admin/trainers", icon: UserGroupIcon },
+  { name: "Write New Blog", href: "/admin/blogs/create", icon: PencilAltIcon },
+  { name: "Trainers", href: "/admin/trainers", icon: UsersIcon }, // Using UsersIcon
   { name: "Add Trainer", href: "/admin/trainers/create", icon: UserAddIcon },
+  // { name: "Settings", href: "/admin/settings", icon: CogIcon }, // Example for future
 ];
 
 export default function Sidebar() {
@@ -26,54 +35,66 @@ export default function Sidebar() {
   const currentPath = router.pathname;
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-brandTextSoft to-brandTextPrimary text-slate-100 flex flex-col fixed h-full shadow-lg font-sans">
-      {/* Logo/Title */}
-      <div className="h-16 flex items-center justify-center border-b border-slate-700 px-4">
-        <Link href="/admin" className="flex items-center space-x-2">
-          {/* Optional: You can add your logo image here if you have one for the admin panel */}
-          {/* <Image src="/admin-logo.png" width={32} height={32} alt="Admin Logo" /> */}
-          <span className="text-2xl font-bold text-white font-header truncate">
-            JK Combat
+    <aside className="w-64 bg-gradient-to-b from-brandTextSoft to-brandTextPrimary text-slate-200 flex flex-col fixed inset-y-0 left-0 z-30 shadow-2xl font-sans">
+      {/* Logo/Title Section */}
+      <div className="h-20 flex items-center justify-center px-4 border-b border-slate-700/50">
+        <Link href="/admin" className="flex items-center space-x-3 group">
+          {/* Optional: Replace with your actual logo if you have one */}
+          {/* <Image src="/admin-logo.png" width={40} height={40} alt="Admin Panel Logo" className="rounded-md" /> */}
+          <span className="text-2xl font-bold text-white group-hover:text-brandAccent transition-colors duration-200 font-header truncate">
+            JK Combat Admin
           </span>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-        {" "}
-        {/* Adjusted padding and space */}
+      {/* Navigation Links */}
+      <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
         {navItems.map((item) => {
+          // More robust active state check:
+          // 1. Exact match for href.
+          // 2. For parent routes (like /admin/blogs), active if currentPath starts with item.href.
+          //    Ensure item.href isn't just "/admin" to avoid highlighting it for all sub-routes unless intended.
           const isActive =
             currentPath === item.href ||
-            (item.href !== "/admin" && currentPath.startsWith(item.href));
+            (item.href !== "/admin" &&
+              currentPath.startsWith(item.href) &&
+              item.href.length > "/admin".length);
 
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition duration-150 ease-in-out group ${
-                isActive
-                  ? "bg-brandAccent text-brandTextOnAccent shadow-inner"
-                  : "text-slate-300 hover:bg-slate-700 hover:text-white"
-              }`}
+              className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium group transition-all duration-200 ease-in-out transform hover:translate-x-1
+                ${
+                  isActive
+                    ? "bg-brandAccent text-brandTextOnAccent shadow-md" // Active state uses brandAccent
+                    : "text-slate-300 hover:bg-brandAccentHover/30 hover:text-white" // Default and hover state
+                }`}
             >
               <item.icon
-                className={`mr-3 h-6 w-6 flex-shrink-0 ${
-                  isActive
-                    ? "text-brandTextOnAccent"
-                    : "text-slate-400 group-hover:text-slate-300"
-                }`}
+                className={`mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-200
+                  ${
+                    isActive
+                      ? "text-brandTextOnAccent"
+                      : "text-slate-400 group-hover:text-slate-200"
+                  }`}
                 aria-hidden="true"
               />
-              {item.name}
+              <span className="truncate">{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Optional Footer in Sidebar */}
-      {/* <div className="p-4 border-t border-slate-700">
-        <p className="text-xs text-slate-400 text-center">&copy; {new Date().getFullYear()} JKCA Admin</p>
+      {/* Optional Footer in Sidebar (e.g., Logout or User Profile) */}
+      {/* <div className="p-4 mt-auto border-t border-slate-700/50">
+        <Link
+          href="/logout" // Or a profile link
+          className="flex items-center px-3 py-2.5 rounded-md text-sm font-medium text-slate-300 hover:bg-red-600 hover:text-white group transition-colors duration-200"
+        >
+          <LogoutIcon className="mr-3 h-5 w-5 text-slate-400 group-hover:text-slate-200" aria-hidden="true" />
+          Logout
+        </Link>
       </div> */}
     </aside>
   );

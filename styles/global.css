@@ -24,3 +24,33 @@ a {
 p {
   @apply text-neutral font-body;
 }
+
+/* styles/globals.css or equivalent */
+.quill-container .ql-toolbar {
+  @apply rounded-t-md border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700;
+}
+
+.quill-container .ql-container {
+  @apply rounded-b-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100;
+  min-height: 200px;
+  /* Ensure it has a minimum height */
+}
+
+.quill-container .ql-editor {
+  min-height: 200px;
+  /* Ensure editor area itself has min height */
+  @apply font-sans text-brandTextPrimary dark:text-slate-100;
+}
+
+/* Adjust icon colors for dark mode if needed */
+.dark .quill-container .ql-snow .ql-stroke {
+  stroke: theme('colors.slate.300');
+}
+
+.dark .quill-container .ql-snow .ql-fill {
+  fill: theme('colors.slate.300');
+}
+
+.dark .quill-container .ql-picker-label {
+  @apply text-slate-300;
+}

@@ -2,55 +2,168 @@
 import React from "react";
 import Link from "next/link";
 import AdminLayout from "../../components/admin/AdminLayout";
+// Example icons (replace with actual SVGs or an icon library like Heroicons)
+const ProductIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
+    />
+  </svg>
+);
+const OrderIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
+    />
+  </svg>
+);
+const AdmissionIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+    />
+  </svg>
+);
+const GalleryIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+    />
+  </svg>
+);
+const BlogIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25h-1.5m-6 0h1.5m-1.5-6h1.5m-6 0h1.5m-6 0h1.5m0 9H3.75c-.621 0-1.125-.504-1.125-1.125V7.5c0-.621.504-1.125 1.125-1.125h3.375c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125h-3.375m0 0c1.676 0 3.017-.174 4.125-.523m0 0c1.676 0 3.017-.174 4.125-.523m0 0c1.108-.349 2.449-.523 4.125-.523m0 0c1.108.349 2.449.523 4.125.523m-8.25 0c1.108.349 2.449.523 4.125.523"
+    />
+  </svg>
+);
 
 export default function AdminHomePage() {
+  const cardBaseStyle =
+    "bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-brandAccent/30 transition-shadow duration-300";
+  const cardTitleStyle =
+    "text-xl font-semibold text-brandTextPrimary dark:text-brandBackground mb-2 flex items-center font-header";
+  const cardDescriptionStyle =
+    "text-brandTextSecondary dark:text-slate-400 mb-4 font-sans";
+  const cardLinkStyle =
+    "text-brandAccent hover:text-brandAccentHover font-medium transition-colors duration-300 font-sans";
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        Dashboard Overview
+    <div className="font-sans">
+      <h1 className="text-3xl font-bold text-brandTextPrimary dark:text-brandBackground mb-8 font-header">
+        Admin Dashboard
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Admissions */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
-            Admissions
+        {/* Manage Products Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <ProductIcon /> Products
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className={cardDescriptionStyle}>
+            View, add, edit, and manage combat game products.
+          </p>
+          <Link href="/admin/products" className={cardLinkStyle}>
+            Manage Products &rarr;
+          </Link>
+        </div>
+
+        {/* View Orders Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <OrderIcon /> Orders
+          </h2>
+          <p className={cardDescriptionStyle}>
+            View and manage customer orders.
+          </p>
+          <Link href="/admin/orders" className={cardLinkStyle}>
+            View Orders &rarr;
+          </Link>
+        </div>
+
+        {/* Admissions Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <AdmissionIcon /> Admissions
+          </h2>
+          <p className={cardDescriptionStyle}>
             View and manage student admissions.
           </p>
-          <Link
-            href="/admin/admissions"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
+          <Link href="/admin/admissions" className={cardLinkStyle}>
             Go to Admissions &rarr;
           </Link>
         </div>
 
-        {/* Gallery */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">Gallery</h2>
-          <p className="text-gray-600 mb-4">
+        {/* Gallery Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <GalleryIcon /> Gallery
+          </h2>
+          <p className={cardDescriptionStyle}>
             Upload and manage gallery images.
           </p>
-          <Link
-            href="/admin/gallery"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
+          <Link href="/admin/gallery" className={cardLinkStyle}>
             Go to Gallery &rarr;
           </Link>
         </div>
 
-        {/* Blog */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">Blog</h2>
-          <p className="text-gray-600 mb-4">Create and manage blog posts.</p>
-          <Link
-            href="/admin/blogs/create"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
+        {/* Blog Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <BlogIcon /> Blog
+          </h2>
+          <p className={cardDescriptionStyle}>Create and manage blog posts.</p>
+          <Link href="/admin/blogs/create" className={cardLinkStyle}>
             Write New Blog Post &rarr;
           </Link>
         </div>
+
+        {/* You can add more cards here for other sections */}
       </div>
     </div>
   );

@@ -1,0 +1,22 @@
+{
+    "name": "Guardian Pro Training Headgear - Matte Black",
+    "shortDescription": "Full-coverage professional training headgear offering maximum protection and visibility for boxing, MMA, and sparring.",
+    "detailedDescription": "<p>Train with confidence using the <strong>Guardian Pro Training Headgear</strong>. Engineered for serious athletes, this headgear provides comprehensive coverage without compromising your field of vision. Its ergonomic design ensures a snug, comfortable fit, while the multi-layered foam padding absorbs impact effectively.</p><h3>Key Features:</h3><ul><li>Durable engineered leather exterior</li><li>Multi-density foam padding for shock absorption</li><li>Full chin and cheek protection</li><li>Adjustable hook-and-loop closure for a secure fit</li><li>Wide-angle visibility</li><li>Moisture-wicking inner lining</li></ul><p>Ideal for intense sparring sessions across various combat disciplines.</p>",
+    "sku": "HDG-PRO-BLK-001",
+    "price": "65.00",
+    "salePrice": "55.00",
+    "stockQuantity": "75",
+    "lowStockThreshold": "10",
+    "category": "Training Gear",
+    "tags": "headgear, sparring, protection, mma, boxing, training, matte black",
+    "brand": "CombatShield",
+    "material": "Engineered Leather, Multi-density Foam",
+    "sizes": ["M", "L"],
+    "colors": ["Black", "Red"],
+    "weight": "16",
+    "weightUnit": "oz",
+    "suitableFor": ["Boxing", "MMA", "Muay Thai", "Sparring", "Intermediate", "Professional"],
+    "safetyRating": "CE Certified (Impact Protection)",
+    "isPublished": true,
+    "isFeatured": false
+  }

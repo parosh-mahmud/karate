@@ -2,7 +2,11 @@
 const nextConfig = {
   // Allow optimized images from Cloudinary
   images: {
-    domains: ["res.cloudinary.com"],
+    domains: [
+      "storage.googleapis.com", // For Firebase Storage
+      "firebasestorage.googleapis.com",
+    ],
+    unoptimized: true,
   },
 
   // Internationalization settings
