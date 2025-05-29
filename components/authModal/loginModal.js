@@ -1,31 +1,36 @@
+// components/authModal/LoginModal.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image"; // If you decide to add an image/logo
+import { useAuth } from "@/context/AuthContext"; // Using path alias
+
+// Heroicons (outline, v1 style as per previous context)
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Button,
-  TextField,
-  IconButton,
-  InputAdornment,
-  CircularProgress,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import {
-  Google as GoogleIcon,
-  Visibility,
-  VisibilityOff,
-  Close as CloseIcon,
-} from "@mui/icons-material";
-import {
-  auth,
-  signInWithPopup,
-  provider,
-  signInWithEmailAndPassword,
-} from "../../utils/firebase";
-import { useAuth } from "@/context/AuthContext"; // Updated path
+  XIcon, // Close icon
+  EyeIcon,
+  EyeOffIcon,
+  MailIcon,
+  LockClosedIcon,
+} from "@heroicons/react/outline";
+
+// Simple Google Icon SVG
+const GoogleIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+    <path d="M1 1h22v22H1z" fill="none" />
+  </svg>
+);
+
+const Spinner = ({ size = "w-5 h-5", color = "border-white" }) => (
+  <div
+    className={`animate-spin rounded-full ${size} border-b-2 ${color}`}
+  ></div>
+);
+
 export default function LoginModal({
   open = false,
   onClose = () => {},
@@ -35,148 +40,276 @@ export default function LoginModal({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', 'warning'
 
-  const { login, googleLogin } = useAuth(); // ✅ Use login methods from context
+  const { login, googleLogin } = useAuth();
 
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+    setTimeout(() => {
+      setSnackbarOpen(false);
+    }, 6000);
+  };
+
   const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
     setIsLoading(true);
     try {
-      await googleLogin(); // ✅ Login via context
-      setSnackbarMessage("Login successful!");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+      await googleLogin();
+      showSnackbar("Login successful! Welcome back.", "success");
       onClose();
     } catch (error) {
       console.error("Google Login Error:", error);
-      setSnackbarMessage("Failed to login with Google.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      showSnackbar(
+        error.message || "Failed to login with Google. Please try again.",
+        "error"
+      );
     } finally {
+      setIsGoogleLoading(false);
       setIsLoading(false);
     }
   };
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
+    if (!email || !password) {
+      showSnackbar("Please enter both email and password.", "warning");
+      return;
+    }
     setIsLoading(true);
     try {
-      await login(email, password); // ✅ Login via context
-      setSnackbarMessage("Login successful!");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+      await login(email, password);
+      showSnackbar("Login successful! Welcome back.", "success");
       onClose();
     } catch (error) {
       console.error("Email Login Error:", error);
-      setSnackbarMessage("Invalid email or password.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      let errorMessage = "Invalid email or password. Please try again.";
+      if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password" ||
+        error.code === "auth/invalid-credential"
+      ) {
+        errorMessage =
+          "Invalid email or password. Please check your credentials.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      showSnackbar(errorMessage, "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogContent className="p-8 relative">
-        <IconButton
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        >
-          <CloseIcon />
-        </IconButton>
-        <DialogTitle className="text-2xl font-bold mb-6 text-center">
-          Login
-        </DialogTitle>
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <Button
-            variant="outlined"
-            startIcon={<GoogleIcon />}
-            fullWidth
-            className="mb-4"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <CircularProgress size={24} />
-            ) : (
-              "Continue with Google"
-            )}
-          </Button>
-          <TextField
-            label="Email Address"
-            variant="outlined"
-            fullWidth
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
-            fullWidth
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={togglePasswordVisibility} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            className="mt-4"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Login"
-            )}
-          </Button>
-        </form>
-        <p className="mt-4 text-center">
-          Don't have an account?{" "}
-          <button
-            onClick={onSwitchToSignup}
-            className="text-blue-600 hover:underline"
-          >
-            Sign up now!
-          </button>
-        </p>
+  useEffect(() => {
+    if (!open) {
+      // Reset form fields when modal closes
+      setEmail("");
+      setPassword("");
+      setShowPassword(false);
+      setIsLoading(false);
+      setIsGoogleLoading(false);
+      setSnackbarOpen(false);
+    }
+  }, [open]);
 
-        {/* Snackbar */}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <>
+      {/* Modal Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+        aria-hidden="true"
+        onClick={onClose}
+      ></div>
+
+      {/* Modal Panel */}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
+      >
+        <div className="relative bg-brandBackground dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden max-h-[90vh]">
+          {/* Form Side */}
+          <div className="w-full p-6 sm:p-8 relative flex flex-col">
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-4 right-4 text-brandTextSecondary hover:text-brandTextPrimary dark:text-slate-400 dark:hover:text-slate-100 transition-colors z-10 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              <XIcon className="w-6 h-6" />
+            </button>
+
+            <div className="text-center mb-6">
+              {/* Optional: Logo */}
+              {/* <Image src="/logo.png" alt="JK Combat Academy" width={120} height={40} className="mx-auto mb-4"/> */}
+              <h2
+                id="login-modal-title"
+                className="text-2xl sm:text-3xl font-bold text-brandTextPrimary dark:text-slate-100 font-header"
+              >
+                Welcome Back!
+              </h2>
+              <p className="text-sm text-brandTextSecondary dark:text-slate-400 mt-1">
+                Log in to continue your journey.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleEmailLogin}
+              className="space-y-5 flex-grow overflow-y-auto pr-1"
+              style={{ maxHeight: "calc(90vh - 180px)" }} // Adjust based on header/footer height in modal
+            >
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-semibold text-brandTextPrimary dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isGoogleLoading ? (
+                  <Spinner color="border-brandAccent" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                Continue with Google
+              </button>
+
+              <div className="flex items-center space-x-2 my-6">
+                <hr className="flex-grow border-slate-300 dark:border-slate-600" />
+                <span className="text-xs font-medium text-brandTextMuted dark:text-slate-500">
+                  OR LOG IN WITH EMAIL
+                </span>
+                <hr className="flex-grow border-slate-300 dark:border-slate-600" />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="login-email"
+                  className="block text-sm font-medium text-brandTextSecondary dark:text-slate-300 mb-1"
+                >
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MailIcon className="h-5 w-5 text-brandTextMuted dark:text-slate-400" />
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    id="login-email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm bg-white dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100 focus:ring-brandAccentFocus focus:border-brandAccentFocus sm:text-sm"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="login-password"
+                  className="block text-sm font-medium text-brandTextSecondary dark:text-slate-300 mb-1"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LockClosedIcon className="h-5 w-5 text-brandTextMuted dark:text-slate-400" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    id="login-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-10 pr-10 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm bg-white dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100 focus:ring-brandAccentFocus focus:border-brandAccentFocus sm:text-sm"
+                    placeholder="••••••••"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="text-brandTextMuted dark:text-slate-400 hover:text-brandTextSecondary dark:hover:text-slate-300"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="text-right mt-1">
+                  <button
+                    type="button"
+                    // onClick={() => { /* TODO: Implement Forgot Password */ }}
+                    className="text-xs font-medium text-brandAccent hover:text-brandAccentHover dark:text-brandAccentFocus dark:hover:text-brandAccentFocus/80 underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoading && !isGoogleLoading ? <Spinner /> : "Log In"}
+              </button>
+            </form>
+            <p className="mt-6 text-center text-sm text-brandTextSecondary dark:text-slate-400">
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={onSwitchToSignup}
+                className="font-medium text-brandAccent hover:text-brandAccentHover dark:text-brandAccentFocus dark:hover:text-brandAccentFocus/80 underline"
+              >
+                Sign up now!
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Snackbar */}
+      {snackbarOpen && (
+        <div
+          className={`fixed bottom-5 left-1/2 -translate-x-1/2 transform z-[60] px-6 py-3 rounded-lg shadow-lg text-sm font-medium text-white
+            ${snackbarSeverity === "success" ? "bg-green-600" : ""}
+            ${snackbarSeverity === "error" ? "bg-red-600" : ""}
+            ${snackbarSeverity === "warning" ? "bg-yellow-500 text-black" : ""}
+            transition-all duration-300 ease-in-out ${
+              snackbarOpen
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-4"
+            }`}
         >
-          <Alert
-            onClose={() => setSnackbarOpen(false)}
-            severity={snackbarSeverity}
-            sx={{ width: "100%" }}
-            variant="filled"
+          {snackbarMessage}
+          <button
+            onClick={() => setSnackbarOpen(false)}
+            className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-current hover:bg-white/20 rounded-full"
+            aria-label="Close snackbar"
           >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-      </DialogContent>
-    </Dialog>
+            <XIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </>
   );
 }

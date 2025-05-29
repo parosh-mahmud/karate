@@ -17,6 +17,9 @@ import {
   collection,
   query,
   where,
+  runTransaction, // Add this
+  serverTimestamp, // Add this
+  increment, // Add this
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -79,4 +82,7 @@ export {
   getDoc,
   getDocs,
   addDoc,
+  runTransaction, // Export this
+  serverTimestamp, // Export this
+  increment, // Export this
 };

@@ -90,7 +90,7 @@ export default function Hero() {
       <div className="w-full lg:w-1/2 flex items-center justify-center mt-12 lg:mt-0">
         <div className="relative w-full max-w-2xl mx-auto lg:max-w-none">
           <Image
-            src="https://res.cloudinary.com/dpudfjkoq/image/upload/c_scale,w_1000/v1729612200/IMG_20221222_003514_221_acgg9h.jpg"
+            src="https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895"
             alt="Dynamic karate training session at JK Combat Academy with students practicing moves"
             width={1000}
             height={750}

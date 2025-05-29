@@ -5,7 +5,7 @@ const blogs = [
     description:
       "Karate is more than just a martial art; it's a way of life. Discover the deeper meaning behind each punch, kick, and kata.",
     image:
-      "https://media.istockphoto.com/id/178386235/photo/young-boy-practising-karate-outdoors.jpg?s=1024x1024&w=is&k=20&c=PP4baUNWVM49tLZ5idK3tkO8CMTZxucHJRDUblb-m6U=",
+      "https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895",
     content: `Karate is a traditional Japanese martial art that has captivated practitioners worldwide for centuries. It’s often seen as a means of self-defense, but for those who delve deeper, karate offers much more. The word "karate" itself translates to "empty hand," symbolizing the idea of facing challenges with an open mind and a spirit free of weapons. 
       
     At its core, karate is about discipline, respect, and self-improvement. Training begins with learning stances, punches, and kicks, but it quickly moves beyond physical techniques. The mental and emotional growth one experiences in karate training is profound. Practitioners learn patience, resilience, and humility, which are often considered as important as physical prowess. A true karateka (karate practitioner) strives to perfect both their body and mind, embodying a philosophy that encourages self-control, inner peace, and respect for others.
@@ -21,7 +21,7 @@ const blogs = [
     description:
       "Karate can be a transformative experience for children. Learn how martial arts can help build essential life skills.",
     image:
-      "https://media.istockphoto.com/id/547026946/photo/on-a-gray-background-little-athletes-in-karategi.jpg?s=1024x1024&w=is&k=20&c=whe5UIlDLsUIt8uvnLw2V7hk9WGYmGYBB5N5UARnZgU=",
+      "https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895",
     content: `Introducing children to karate at a young age offers numerous benefits that extend well beyond self-defense. In today's fast-paced, technology-driven world, physical activities like karate provide children with an outlet for their energy while instilling values that contribute to personal growth and success.
 
     One of the primary benefits of karate for children is the boost in confidence it provides. As kids learn new skills and earn belts through hard work, they gain a sense of accomplishment and pride in their abilities. Each new belt symbolizes their progress, teaching them that with dedication and perseverance, they can achieve their goals.

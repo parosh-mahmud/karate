@@ -1,139 +1,3 @@
-// // components/context/AuthContext.js
-// "use client";
-
-// import React, {
-//   createContext,
-//   useContext,
-//   useState,
-//   useEffect,
-//   useMemo,
-//   useCallback,
-// } from "react";
-// import {
-//   auth,
-//   provider,
-//   db,
-//   signInWithPopup,
-//   signInWithEmailAndPassword,
-//   createUserWithEmailAndPassword,
-//   signOut,
-// } from "../../utils/firebase";
-// import { onAuthStateChanged } from "firebase/auth";
-// import { doc, getDoc, setDoc } from "firebase/firestore";
-// import { CircularProgress, Box } from "@mui/material";
-
-// const AuthContext = createContext({
-//   currentUser: null,
-//   role: null,
-//   loading: true,
-//   login: async () => {},
-//   googleLogin: async () => {},
-//   signup: async () => {},
-//   logout: async () => {},
-// });
-
-// export function AuthProvider({ children }) {
-//   const [currentUser, setCurrentUser] = useState(null);
-//   const [role, setRole] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-//       setLoading(true);
-//       if (user) {
-//         setCurrentUser(user);
-//         // fetch or default role
-//         try {
-//           const userDoc = await getDoc(doc(db, "users", user.uid));
-//           setRole(userDoc.exists() ? userDoc.data().role : "student");
-//         } catch {
-//           setRole("student");
-//         }
-//       } else {
-//         setCurrentUser(null);
-//         setRole(null);
-//       }
-//       setLoading(false);
-//     });
-//     return unsubscribe;
-//   }, []);
-
-//   // Email/password login
-//   const login = useCallback(async (email, pw) => {
-//     await signInWithEmailAndPassword(auth, email, pw);
-//     // onAuthStateChanged will update currentUser
-//   }, []);
-
-//   // Google popup login
-//   const googleLogin = useCallback(async () => {
-//     const result = await signInWithPopup(auth, provider);
-//     const user = result.user;
-//     // ensure Firestore user doc exists
-//     const userRef = doc(db, "users", user.uid);
-//     const snap = await getDoc(userRef);
-//     if (!snap.exists()) {
-//       await setDoc(userRef, {
-//         uid: user.uid,
-//         email: user.email,
-//         role: "student",
-//         profilePicture: user.photoURL,
-//         createdAt: new Date(),
-//       });
-//     }
-//   }, []);
-
-//   // Email/signup + Firestore write
-//   const signup = useCallback(async (email, pw, additionalData = {}) => {
-//     const cred = await createUserWithEmailAndPassword(auth, email, pw);
-//     const user = cred.user;
-//     await setDoc(doc(db, "users", user.uid), {
-//       uid: user.uid,
-//       email: user.email,
-//       role: "student",
-//       createdAt: new Date(),
-//       ...additionalData,
-//     });
-//   }, []);
-
-//   const logout = useCallback(() => signOut(auth), []);
-
-//   const value = useMemo(
-//     () => ({
-//       currentUser,
-//       role,
-//       loading,
-//       login,
-//       googleLogin,
-//       signup,
-//       logout,
-//     }),
-//     [currentUser, role, loading, login, googleLogin, signup, logout]
-//   );
-
-//   if (loading && typeof window !== "undefined") {
-//     return (
-//       <Box
-//         sx={{
-//           display: "flex",
-//           justifyContent: "center",
-//           alignItems: "center",
-//           height: "100vh",
-//         }}
-//       >
-//         <CircularProgress />
-//       </Box>
-//     );
-//   }
-
-//   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-// }
-
-// export function useAuth() {
-//   const ctx = useContext(AuthContext);
-//   if (!ctx) throw new Error("useAuth must be inside AuthProvider");
-//   return ctx;
-// }
-
 "use client";
 
 import {
@@ -150,41 +14,89 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, provider, db } from "@/lib/firebase";
 import { CircularProgress, Box } from "@mui/material";
+
+// Define user roles
+const USER_ROLES = {
+  ADMIN: "admin",
+  INSTRUCTOR: "instructor",
+  STUDENT: "student",
+};
+
+const DEFAULT_ROLE = USER_ROLES.STUDENT;
 
 const AuthContext = createContext({
   currentUser: null,
   role: null,
   loading: true,
+  isAdmin: false,
+  isInstructor: false,
   login: async () => {},
   googleLogin: async () => {},
   signup: async () => {},
   logout: async () => {},
+  updateUserProfile: async () => {},
 });
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch user data including role
+  const fetchUserData = async (user) => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setRole(userData.role || DEFAULT_ROLE);
+        return userData;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setError(error.message);
+      return null;
+    }
+  };
+
+  // Update user document in Firestore
+  const updateUserDocument = async (userId, data) => {
+    try {
+      const userRef = doc(db, "users", userId);
+      await setDoc(
+        userRef,
+        {
+          ...data,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error("Error updating user document:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
           setCurrentUser(user);
-          // Fetch user role from Firestore
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          setRole(userDoc.exists() ? userDoc.data().role : "student");
+          const userData = await fetchUserData(user);
+          setRole(userData?.role || DEFAULT_ROLE);
         } else {
           setCurrentUser(null);
           setRole(null);
         }
       } catch (error) {
         console.error("Auth state change error:", error);
-        setRole("student"); // Fallback role
+        setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -194,7 +106,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      await fetchUserData(result.user);
+      return result.user;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   }, []);
 
   const googleLogin = useCallback(async () => {
@@ -202,7 +121,6 @@ export function AuthProvider({ children }) {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Create/update user document in Firestore
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
@@ -210,12 +128,15 @@ export function AuthProvider({ children }) {
         await setDoc(userRef, {
           uid: user.uid,
           email: user.email,
-          role: "student",
+          displayName: user.displayName,
+          role: DEFAULT_ROLE,
           profilePicture: user.photoURL,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         });
       }
+
+      return user;
     } catch (error) {
       console.error("Google login error:", error);
       throw error;
@@ -231,19 +152,56 @@ export function AuthProvider({ children }) {
       );
       const user = credential.user;
 
+      // Update profile if name provided
+      if (additionalData.displayName) {
+        await updateProfile(user, {
+          displayName: additionalData.displayName,
+        });
+      }
+
+      // Create user document
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
-        role: "student",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        displayName: additionalData.displayName || null,
+        role: DEFAULT_ROLE,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
         ...additionalData,
       });
+
+      return user;
     } catch (error) {
       console.error("Signup error:", error);
       throw error;
     }
   }, []);
+
+  const updateUserProfile = useCallback(
+    async (userData) => {
+      try {
+        if (!currentUser) throw new Error("No user logged in");
+
+        // Update auth profile if display name or photo provided
+        if (userData.displayName || userData.photoURL) {
+          await updateProfile(currentUser, {
+            displayName: userData.displayName || currentUser.displayName,
+            photoURL: userData.photoURL || currentUser.photoURL,
+          });
+        }
+
+        // Update Firestore document
+        await updateUserDocument(currentUser.uid, userData);
+
+        // Refresh user data
+        await fetchUserData(currentUser);
+      } catch (error) {
+        console.error("Profile update error:", error);
+        throw error;
+      }
+    },
+    [currentUser]
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -261,12 +219,26 @@ export function AuthProvider({ children }) {
       currentUser,
       role,
       loading,
+      error,
+      isAdmin: role === USER_ROLES.ADMIN,
+      isInstructor: role === USER_ROLES.INSTRUCTOR,
       login,
       googleLogin,
       signup,
       logout,
+      updateUserProfile,
     }),
-    [currentUser, role, loading, login, googleLogin, signup, logout]
+    [
+      currentUser,
+      role,
+      loading,
+      error,
+      login,
+      googleLogin,
+      signup,
+      logout,
+      updateUserProfile,
+    ]
   );
 
   if (loading && typeof window !== "undefined") {
@@ -294,3 +266,6 @@ export function useAuth() {
   }
   return context;
 }
+
+// Export roles for use in other components
+export { USER_ROLES };

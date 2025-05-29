@@ -1,292 +1,212 @@
 // components/Navbar.js
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import Image from "next/image";
+
 import ThemeChanger from "./DarkSwitch";
 import LoginModal from "./authModal/loginModal";
 import SignupModal from "./authModal/signupModal";
-import ProfileModal from "./profileModal/profileMOdal";
-import Image from "next/image";
-import { useAuth } from "@/context/AuthContext"; // Updated path
-import logo from "../assets/logos/Arman.png";
-import { useCartState } from "../context/CartContext";
+import ProfileModal from "./profileModal/profileMOdal"; // Typo kept as per original
+import { useAuth } from "@/context/AuthContext";
+import { useCartState, useCartDispatch } from "@/context/CartContext"; // Assuming @/ points to root
+import logo from "../assets/logos/Arman.png"; // Ensure this path is correct
+
+// Heroicons (example, install if not already: yarn add @heroicons/react)
+import {
+  MenuIcon,
+  XIcon,
+  ShoppingCartIcon,
+  UserCircleIcon,
+  LogoutIcon,
+  CogIcon,
+  AcademicCapIcon,
+} from "@heroicons/react/outline";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false); // New state for cart sidebar
+  const dispatch = useCartDispatch();
   const router = useRouter();
   const { items: cartItems } = useCartState();
   const { currentUser, loading, logout } = useAuth();
 
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 0);
-  };
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > 50); // Trigger a bit later for a more noticeable effect
+  }, []);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [handleScroll]);
 
-  const openLoginModal = () => setIsLoginModalOpen(true);
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+    setIsSidebarOpen(false);
+  };
   const closeLoginModal = () => setIsLoginModalOpen(false);
-  const openSignupModal = () => setIsSignupModalOpen(true);
+  const openSignupModal = () => {
+    setIsSignupModalOpen(true);
+    setIsSidebarOpen(false);
+  };
   const closeSignupModal = () => setIsSignupModalOpen(false);
+
   const openProfileModal = () => {
     setIsProfileModalOpen(true);
-    setIsProfileDropdownOpen(false);
-    setIsMobileMenuOpen(false);
+    setIsSidebarOpen(false); // Close sidebar when opening profile modal
   };
   const closeProfileModal = () => setIsProfileModalOpen(false);
 
   const handleLogout = async () => {
     try {
       await logout();
-      setIsProfileDropdownOpen(false);
-      setIsMobileMenuOpen(false);
+      setIsSidebarOpen(false); // Close sidebar on logout
+      router.push("/"); // Redirect to home on logout
     } catch (error) {
       console.error("Logout Failed:", error);
+      // TODO: Show error to user (e.g., via snackbar)
     }
   };
 
-  const toggleProfileDropdown = () => {
-    setIsProfileDropdownOpen((prevState) => !prevState);
-  };
-
-  const toggleMobileDropdown = (itemName) => {
-    setOpenMobileDropdown(openMobileDropdown === itemName ? null : itemName);
-  };
-
   const openStudentDashboard = () => {
-    setIsProfileDropdownOpen(false);
-    setIsMobileMenuOpen(false);
-    router.push("/student");
+    setIsSidebarOpen(false);
+    router.push("/student"); // Assuming '/student' is the correct path
   };
 
   const navigation = [
-    { name: "হোম", href: "/" },
-    {
-      name: "ভর্তি",
-      href: "/admission",
-      children: [
-        { name: "এক কালিন", href: "/admission" },
-        { name: "মাসিক", href: "/admission/monthly" },
-      ],
-    },
-    {
-      name: "গ্যালারি",
-      href: "/gallery",
-      children: [
-        { name: "জুডো", href: "/gallery/judo" },
-        { name: "কারাতে", href: "/gallery/karate" },
-        { name: "অনুষ্ঠান এবং অন্যান্য খেলা", href: "/gallery/events" },
-      ],
-    },
-    {
-      name: "স্পোর্টস",
-      href: "/sports",
-      children: [
-        { name: "জুডো", href: "/sports/judo" },
-        { name: "কারাতে", href: "/sports/karate" },
-        { name: "স্কেটিং", href: "/sports/skating" },
-        { name: "বিএনিসিসি", href: "/sports/bncc" },
-        { name: "এথলেটিস", href: "/sports/athletics" },
-        { name: "অন্যান্য", href: "/sports/others" },
-      ],
-    },
-    { name: "পণ্যসমূহ", href: "/products" },
-    { name: "নিউজ", href: "/blog" },
-    { name: "কোর্সসমূহ", href: "/courses" },
-    { name: "পরিচিতি", href: "/about" },
+    { name: "Home", href: "/" },
+    { name: "Admission", href: "/admission" },
+    { name: "Gallery", href: "/gallery" },
+    { name: "Sports", href: "/sports" },
+    { name: "Products", href: "/products" },
+    { name: "News", href: "/blog" },
+    { name: "Courses", href: "/courses" },
+    { name: "About", href: "/about" },
   ];
 
+  // Common Tailwind classes based on your branding
   const linkBaseClass =
-    "text-base font-medium font-body transition duration-150 ease-in-out";
+    "text-base font-medium font-body transition-colors duration-150 ease-in-out py-1";
   const linkInactiveClass =
-    "text-trueGray-700 dark:text-trueGray-300 hover:text-brandBlue dark:hover:text-brandGreen";
-  const linkActiveClass = "text-brandBlue dark:text-brandGreen";
+    "text-brandTextSecondary dark:text-slate-300 hover:text-brandAccent dark:hover:text-brandAccentFocus";
+  const linkActiveClass =
+    "text-brandAccent dark:text-brandAccentFocus font-semibold";
 
-  const dropdownItemBaseClass =
-    "block w-full text-left px-4 py-2 text-sm font-body transition-colors";
-  const dropdownItemInactiveClass =
-    "text-trueGray-700 dark:text-trueGray-200 hover:bg-brandBlue/[.07] dark:hover:bg-brandGreen/[.15] hover:text-brandBlue dark:hover:text-brandGreen";
+  const sidebarLinkBaseClass =
+    "flex items-center px-3 py-3 rounded-lg text-base font-medium font-body transition-all duration-200 ease-in-out group";
+  const sidebarLinkInactiveClass =
+    "text-brandTextSecondary dark:text-slate-200 hover:bg-brandAccent/10 hover:text-brandAccent dark:hover:text-brandAccentFocus dark:hover:bg-brandAccentFocus/10";
+  const sidebarLinkActiveClass =
+    "bg-brandAccent text-brandTextOnAccent shadow-sm dark:bg-brandAccentFocus dark:text-brandTextPrimary";
 
-  const mobileLinkBaseClass =
-    "block px-3 py-2 rounded-md text-base font-medium font-body transition-colors";
-  const mobileLinkInactiveClass =
-    "text-trueGray-700 dark:text-trueGray-300 hover:text-brandBlue dark:hover:text-brandGreen hover:bg-trueGray-50 dark:hover:bg-trueGray-800";
-  const mobileLinkActiveClass =
-    "text-brandBlue dark:text-brandGreen bg-brandBlue/[.07] dark:bg-brandGreen/[.15]";
-  const mobileDropdownButtonClass =
-    "w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium font-body transition-colors";
+  const openCart = () => {
+    setIsCartOpen(true);
+  };
+
+  const closeCart = () => {
+    setIsCartOpen(false);
+  };
 
   return (
     <>
       <header
-        className={`fixed top-0 z-50 w-full transition-all duration-300 font-sans ${
+        className={`fixed top-0 z-30 w-full transition-all duration-300 ease-in-out font-sans ${
           isScrolled
-            ? "shadow-lg backdrop-blur-sm bg-neutral/80 dark:bg-primary/80"
-            : "bg-neutral dark:bg-primary"
+            ? "shadow-lg bg-brandBackground/90 dark:bg-slate-900/90 backdrop-blur-sm"
+            : "bg-brandBackground dark:bg-slate-900"
         }`}
       >
-        <nav className="container mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+        <nav className="container mx-auto flex items-center justify-between px-4 h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 shrink-0">
             <Image
               src={logo}
               alt="JK Combat Academy Logo"
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
+              priority
             />
-            <span className="text-xl md:text-2xl font-bold uppercase text-brandBlue dark:text-brandGreen font-header">
+            <span className="text-lg sm:text-xl md:text-2xl font-bold uppercase text-brandAccent font-header">
               JK Combat Academy
             </span>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-5 xl:space-x-7">
             {navigation.map((item) => (
-              <div key={item.name} className="relative group">
-                <Link
-                  href={item.href}
-                  className={`${linkBaseClass} flex items-center ${
-                    router.pathname === item.href ||
-                    (item.children && router.pathname.startsWith(item.href))
-                      ? linkActiveClass
-                      : linkInactiveClass
-                  }`}
-                >
-                  {item.name}
-                  {item.children && (
-                    <svg
-                      className="w-4 h-4 ml-1 fill-current"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </Link>
-
-                {item.children && (
-                  <div className="absolute left-0 mt-2 w-56 bg-neutral dark:bg-trueGray-800 rounded-md shadow-xl py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out transform translate-y-2 group-hover:translate-y-0 z-20 ring-1 ring-primary/10 dark:ring-neutral/10">
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.name}
-                        href={child.href}
-                        className={`${dropdownItemBaseClass} ${dropdownItemInactiveClass} rounded-md mx-1`}
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`${linkBaseClass} ${
+                  router.pathname === item.href
+                    ? linkActiveClass
+                    : linkInactiveClass
+                }`}
+              >
+                {item.name}
+              </Link>
             ))}
           </div>
 
-          {/* Actions & Mobile Toggle */}
-          <div className="flex items-center space-x-3">
+          {/* Desktop Actions & Mobile Menu Trigger */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <ThemeChanger />
-
-            <Link
-              href="/cart"
-              className={`relative p-1 transition-colors ${linkInactiveClass}`}
+            <button
+              onClick={openCart}
+              className="relative p-2 rounded-full text-brandTextSecondary dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-brandAccent dark:hover:text-brandAccentFocus transition-colors"
+              aria-label="Shopping Cart"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m5-9v9m4-9v9m4-9l2 9"
-                />
-              </svg>
+              <ShoppingCartIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brandRed text-neutral text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartItems.reduce((s, itm) => s + itm.quantity, 0)}
+                <span className="absolute top-0 right-0 block h-5 w-5 transform -translate-y-1/2 translate-x-1/2 rounded-full bg-brandRed text-white text-xs font-semibold flex items-center justify-center ring-2 ring-brandBackground dark:ring-slate-900">
+                  {cartItems.reduce((sum, itm) => sum + (itm.quantity || 1), 0)}
                 </span>
               )}
-            </Link>
+            </button>
 
-            {/* Desktop Auth */}
-            <div className="hidden lg:flex items-center space-x-3">
-              {currentUser ? (
-                <div className="relative">
-                  <button
-                    onClick={toggleProfileDropdown}
-                    className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandBlue dark:focus:ring-brandGreen rounded-full"
-                  >
-                    <img
-                      src={
-                        currentUser.photoURL ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          currentUser.displayName || currentUser.email || "U"
-                        )}&background=random&color=fff`
-                      }
-                      alt={currentUser.displayName || currentUser.email}
-                      className="w-9 h-9 rounded-full border-2 border-transparent hover:border-brandBlue dark:hover:border-brandGreen transition-colors"
-                    />
-                  </button>
-
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-neutral dark:bg-trueGray-800 rounded-md shadow-xl py-1 ring-1 ring-primary/10 dark:ring-neutral/10 z-20">
-                      <button
-                        onClick={() => {
-                          setIsProfileModalOpen(true);
-                          setIsProfileDropdownOpen(false);
-                        }}
-                        className={`${dropdownItemBaseClass} ${dropdownItemInactiveClass}`}
-                      >
-                        Profile
-                      </button>
-                      <button
-                        onClick={openStudentDashboard}
-                        className={`${dropdownItemBaseClass} ${dropdownItemInactiveClass}`}
-                      >
-                        Student Dashboard
-                      </button>
-                      <div className="border-t border-trueGray-200 dark:border-trueGray-700 my-1" />
-                      <button
-                        onClick={handleLogout}
-                        className={`${dropdownItemBaseClass} text-brandRed dark:text-brandRed hover:bg-brandRed/[.07] dark:hover:bg-brandRed/[.15]`}
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
+            {/* Desktop Auth: Profile Picture or Sign In/Up Buttons */}
+            <div className="hidden lg:flex items-center space-x-3 pl-2">
+              {loading ? (
+                <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+              ) : currentUser ? (
+                <button
+                  onClick={openProfileModal}
+                  className="focus:outline-none rounded-full focus:ring-2 focus:ring-offset-2 focus:ring-brandAccent dark:focus:ring-offset-slate-900"
+                  aria-label="Open Profile"
+                >
+                  <Image
+                    src={
+                      currentUser.photoURL ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        currentUser.displayName || currentUser.email || "U"
+                      )}&background=random&color=fff&size=128`
+                    }
+                    alt={currentUser.displayName || currentUser.email || "User"}
+                    width={36}
+                    height={36}
+                    className="w-9 h-9 rounded-full border-2 border-transparent hover:border-brandAccent dark:hover:border-brandAccentFocus transition-colors"
+                  />
+                </button>
               ) : (
                 <>
                   <button
-                    onClick={() => setIsLoginModalOpen(true)}
-                    className={`px-4 py-2 text-sm font-medium font-body transition-colors ${linkActiveClass} hover:opacity-80 dark:hover:opacity-80`}
+                    onClick={openLoginModal}
+                    className={`${linkBaseClass} ${linkInactiveClass} px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700`}
                   >
                     Sign In
                   </button>
                   <button
-                    onClick={() => setIsSignupModalOpen(true)}
-                    className="px-5 py-2 text-sm font-medium font-body text-neutral bg-brandBlue hover:bg-brandBlue/90 
-                               dark:text-primary dark:bg-brandGreen dark:hover:bg-brandGreen/90 
-                               rounded-md shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandBlue dark:focus:ring-brandGreen"
+                    onClick={openSignupModal}
+                    className={`${linkBaseClass} text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover dark:text-brandTextPrimary dark:bg-brandAccentFocus dark:hover:bg-brandAccent px-4 py-1.5 rounded-md shadow-sm`}
                   >
                     Sign Up
                   </button>
@@ -294,207 +214,318 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="flex lg:hidden">
+            {/* Mobile Menu Icon */}
+            <div className="lg:hidden">
               <button
-                onClick={() => setIsMobileMenuOpen((o) => !o)}
-                className={`p-1 focus:outline-none transition-colors ${linkInactiveClass}`}
-                aria-label="Toggle mobile menu"
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 rounded-md text-brandTextSecondary dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-brandAccent dark:hover:text-brandAccentFocus focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brandAccent"
+                aria-label="Open menu"
               >
-                <svg
-                  className={`w-7 h-7 transition-transform transform ${
-                    isMobileMenuOpen ? "rotate-90" : ""
-                  }`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  {isMobileMenuOpen ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  )}
-                </svg>
+                <MenuIcon className="h-6 w-6 sm:h-7 sm:w-7" />
               </button>
             </div>
           </div>
         </nav>
+      </header>
 
-        {/* Mobile Menu */}
+      {/* Mobile Sidebar */}
+      <>
+        {/* Overlay */}
         <div
-          className={`lg:hidden transition-all duration-300 ease-in-out overflow-y-auto bg-neutral dark:bg-primary shadow-lg ${
-            isMobileMenuOpen
-              ? "max-h-[calc(100vh-60px)] border-t border-trueGray-200 dark:border-trueGray-700"
-              : "max-h-0"
+          className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ease-in-out lg:hidden ${
+            isSidebarOpen
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
           }`}
-        >
-          <div className="px-2 pt-2 pb-4 space-y-1 sm:px-3">
-            {navigation.map((item) => (
-              <div key={item.name}>
-                {item.children ? (
-                  <>
-                    <button
-                      onClick={() => toggleMobileDropdown(item.name)}
-                      className={`${mobileDropdownButtonClass} ${
-                        router.pathname.startsWith(item.href)
-                          ? mobileLinkActiveClass
-                          : mobileLinkInactiveClass
-                      }`}
-                    >
-                      {item.name}
-                      <svg
-                        className={`w-5 h-5 transform transition-transform ${
-                          openMobileDropdown === item.name ? "rotate-180" : ""
-                        }`}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                    {openMobileDropdown === item.name && (
-                      <div className="pl-4 mt-1 space-y-1">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.name}
-                            href={child.href}
-                            className={`${mobileLinkBaseClass} ${
-                              router.pathname === child.href
-                                ? mobileLinkActiveClass
-                                : "text-trueGray-600 dark:text-trueGray-400 hover:text-brandBlue dark:hover:text-brandGreen hover:bg-trueGray-50 dark:hover:bg-trueGray-800"
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            {child.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={`${mobileLinkBaseClass} ${
-                      router.pathname === item.href
-                        ? mobileLinkActiveClass
-                        : mobileLinkInactiveClass
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                )}
-              </div>
-            ))}
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        ></div>
 
-            {/* Mobile Auth */}
-            <div className="border-t border-trueGray-200 dark:border-trueGray-700 mt-4 pt-4 space-y-2">
-              {currentUser ? (
-                <>
-                  <div className="flex items-center px-3 py-2">
-                    <img
-                      src={
-                        currentUser.photoURL ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          currentUser.displayName || currentUser.email || "U"
-                        )}&background=random&color=fff`
-                      }
-                      alt={currentUser.displayName || currentUser.email}
-                      className="w-10 h-10 rounded-full mr-3"
-                    />
-                    <div>
-                      <p className="text-base font-medium text-primary dark:text-neutral font-body">
-                        {currentUser.displayName || "User"}
-                      </p>
-                      <p className="text-sm font-medium text-trueGray-600 dark:text-trueGray-400 font-body">
-                        {currentUser.email}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIsProfileModalOpen(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`${mobileLinkBaseClass} ${mobileLinkInactiveClass}`}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      openStudentDashboard();
-                    }}
-                    className={`${mobileLinkBaseClass} ${mobileLinkInactiveClass}`}
-                  >
-                    Student Dashboard
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className={`${mobileLinkBaseClass} text-brandRed dark:text-brandRed hover:bg-brandRed/[.07] dark:hover:bg-brandRed/[.15]`}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => {
-                      setIsLoginModalOpen(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`${mobileLinkBaseClass} ${mobileLinkActiveClass} hover:opacity-80 dark:hover:opacity-80`}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsSignupModalOpen(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`${mobileLinkBaseClass} text-center text-neutral bg-brandBlue hover:bg-brandBlue/90 dark:text-primary dark:bg-brandGreen dark:hover:bg-brandGreen/90`}
-                  >
-                    Sign Up
-                  </button>
-                </>
-              )}
+        {/* Sidebar Panel */}
+        <div
+          className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-brandBackground dark:bg-slate-800 shadow-xl transition-transform duration-300 ease-in-out lg:hidden transform ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sidebar-title"
+        >
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 h-16 sm:h-20">
+            <Link
+              href="/"
+              className="flex items-center space-x-2"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <Image
+                src={logo}
+                alt="JKCA Logo"
+                width={32}
+                height={32}
+                className="rounded-full h-8 w-8"
+              />
+              <span
+                id="sidebar-title"
+                className="text-lg font-bold text-brandAccent font-header"
+              >
+                JK Combat Academy
+              </span>
+            </Link>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 rounded-md text-brandTextSecondary dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              aria-label="Close menu"
+            >
+              <XIcon className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Sidebar Navigation */}
+          <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`${sidebarLinkBaseClass} ${
+                  router.pathname === item.href
+                    ? sidebarLinkActiveClass
+                    : sidebarLinkInactiveClass
+                }`}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                {/* You can add icons to nav items here if desired */}
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Sidebar Footer/Actions */}
+          <div className="border-t border-slate-200 dark:border-slate-700 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-brandTextSecondary dark:text-slate-300">
+                Theme
+              </span>
+              <ThemeChanger />
             </div>
+            <Link
+              href="/cart"
+              onClick={() => setIsSidebarOpen(false)}
+              className={`${sidebarLinkBaseClass} ${sidebarLinkInactiveClass}`}
+            >
+              <ShoppingCartIcon className="h-5 w-5 mr-3 text-brandTextSecondary dark:text-slate-400 group-hover:text-brandAccent dark:group-hover:text-brandAccentFocus" />
+              Shopping Cart
+              {cartItems.length > 0 && (
+                <span className="ml-auto inline-block px-2 py-0.5 text-xs font-semibold bg-brandRed text-white rounded-full">
+                  {cartItems.reduce((sum, itm) => sum + (itm.quantity || 1), 0)}
+                </span>
+              )}
+            </Link>
+
+            <hr className="border-slate-200 dark:border-slate-700 !my-4" />
+
+            {loading ? (
+              <div className="flex justify-center py-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brandAccent"></div>
+              </div>
+            ) : currentUser ? (
+              <>
+                <button
+                  onClick={openProfileModal}
+                  className={`${sidebarLinkBaseClass} ${sidebarLinkInactiveClass} w-full`}
+                >
+                  <Image
+                    src={
+                      currentUser.photoURL ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        currentUser.displayName || currentUser.email || "U"
+                      )}&background=random&color=fff&size=96`
+                    }
+                    alt="User Avatar"
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full mr-3 border border-slate-300 dark:border-slate-600"
+                  />
+                  <div className="text-left">
+                    <span className="block text-sm font-semibold text-brandTextPrimary dark:text-slate-100 truncate">
+                      {currentUser.displayName || "User Profile"}
+                    </span>
+                    <span className="block text-xs text-brandTextMuted dark:text-slate-400 truncate">
+                      {currentUser.email}
+                    </span>
+                  </div>
+                </button>
+                <button
+                  onClick={openStudentDashboard}
+                  className={`${sidebarLinkBaseClass} ${sidebarLinkInactiveClass} w-full`}
+                >
+                  <AcademicCapIcon className="h-5 w-5 mr-3 text-brandTextSecondary dark:text-slate-400 group-hover:text-brandAccent dark:group-hover:text-brandAccentFocus" />{" "}
+                  Student Dashboard
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className={`${sidebarLinkBaseClass} text-brandRed hover:bg-brandRed/10 w-full`}
+                >
+                  <LogoutIcon className="h-5 w-5 mr-3 group-hover:text-brandRed" />{" "}
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={openLoginModal}
+                  className={`${sidebarLinkBaseClass} ${sidebarLinkInactiveClass} w-full justify-center bg-slate-100 dark:bg-slate-700`}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={openSignupModal}
+                  className={`${sidebarLinkBaseClass} ${sidebarLinkActiveClass} w-full justify-center`}
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
         </div>
-      </header>
+      </>
+
+      {/* Cart Sidebar */}
+      <div
+        className={`fixed inset-y-0 right-0 z-50 flex w-96 max-w-[90vw] flex-col bg-white dark:bg-slate-900 shadow-2xl transition-transform duration-300 ease-in-out transform ${
+          isCartOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cart-sidebar-title"
+      >
+        {/* Cart Sidebar Header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 h-16 sm:h-20">
+          <h2
+            id="cart-sidebar-title"
+            className="text-lg font-bold text-brandAccent font-header"
+          >
+            Shopping Cart
+          </h2>
+          <button
+            onClick={closeCart}
+            className="p-2 rounded-md text-brandTextSecondary dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            aria-label="Close cart"
+          >
+            <XIcon className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Cart Items */}
+        <div className="flex-1 px-4 py-6 overflow-y-auto">
+          {cartItems.length === 0 ? (
+            <p className="text-brandTextSecondary dark:text-slate-400">
+              Your cart is empty.
+            </p>
+          ) : (
+            <ul>
+              {cartItems.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center py-3 border-b border-slate-200 dark:border-slate-700"
+                >
+                  <div className="w-16 h-16 mr-4 relative">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      className="object-cover rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-brandTextPrimary dark:text-slate-100">
+                      {item.name}
+                    </h3>
+                    <p className="text-xs text-brandTextMuted dark:text-slate-400">
+                      {item.sku}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <span className="text-sm font-semibold text-brandTextPrimary dark:text-slate-100">
+                        ৳{(item.price * item.quantity).toFixed(2)}
+                      </span>
+                      <span className="ml-2 text-xs text-brandTextMuted dark:text-slate-400">
+                        ({item.quantity} x ৳{item.price.toFixed(2)})
+                      </span>
+                    </div>
+                    {/* Quantity Increase/Decrease */}
+                    <div className="flex items-center mt-2">
+                      <button
+                        onClick={() => {
+                          dispatch({ type: "DECREASE_ITEM", payload: item.id });
+                        }}
+                        className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-brandTextSecondary dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 focus:outline-none"
+                      >
+                        -
+                      </button>
+                      <span className="mx-2 text-sm font-medium text-brandTextPrimary dark:text-slate-100">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => {
+                          dispatch({ type: "INCREASE_ITEM", payload: item.id });
+                        }}
+                        className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-brandTextSecondary dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 focus:outline-none"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Cart Footer/Checkout */}
+        <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-brandTextPrimary dark:text-slate-100">
+              Subtotal:
+            </span>
+            <span className="text-xl font-bold text-brandTextPrimary dark:text-slate-100">
+              ৳
+              {cartItems
+                .reduce((sum, item) => sum + item.price * item.quantity, 0)
+                .toFixed(2)}
+            </span>
+          </div>
+          {/* Go to Checkout Button */}
+          <Link href="/checkout" className="block">
+            <button
+              className="w-full py-2.5 px-4 rounded-md text-white font-medium transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--focus-ring-color)] hover:opacity-85 active:scale-95 bg-[var(--primary-color)]"
+              style={{ display: "block", color: "white", zIndex: 10 }} // Added style to ensure visibility
+            >
+              Go to Checkout
+            </button>
+          </Link>
+        </div>
+      </div>
 
       {/* Modals */}
       <LoginModal
         open={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
+        onClose={closeLoginModal}
         onSwitchToSignup={() => {
-          setIsLoginModalOpen(false);
-          setIsSignupModalOpen(true);
+          closeLoginModal();
+          openSignupModal();
         }}
       />
       <SignupModal
         open={isSignupModalOpen}
-        onClose={() => setIsSignupModalOpen(false)}
+        onClose={closeSignupModal}
+        // Add onSwitchToLogin if your SignupModal has that functionality
       />
-      {currentUser && (
+      {/* Ensure ProfileModal only renders if currentUser exists, or handles null user prop gracefully */}
+      {currentUser && isProfileModalOpen && (
         <ProfileModal
           open={isProfileModalOpen}
-          onClose={() => setIsProfileModalOpen(false)}
+          onClose={closeProfileModal}
+          // user prop is passed implicitly by AuthContext or you might need to pass currentUser
+          // The ProfileModal you provided earlier expects a 'user' prop.
           user={currentUser}
         />
       )}

@@ -470,12 +470,51 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useCartDispatch } from "../../context/CartContext"; // Assuming path is correct
+import { useCartDispatch } from "@/context/CartContext";
+// --- Helper Function to Unescape and Prepare HTML ---
+function prepareHtmlForDisplay(htmlString) {
+  if (!htmlString || typeof htmlString !== "string") {
+    return "<p>No detailed description available.</p>";
+  }
+
+  let processedHtml = htmlString;
+
+  // 1. Unescape core HTML entities (most critical for your issue)
+  // This handles cases like &lt;p&gt; becoming <p>
+  const tempElement =
+    typeof document !== "undefined" ? document.createElement("div") : null;
+  if (tempElement) {
+    tempElement.innerHTML = processedHtml;
+    processedHtml = tempElement.textContent || tempElement.innerText || "";
+  } else {
+    // Fallback for non-browser environments or if document is not available
+    // This is a basic unescape, might not cover all edge cases like a full library would.
+    processedHtml = processedHtml
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&") // Must be before other entities that use &
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'");
+  }
+
+  // 2. Remove the outer <p><span style="...">...</span></p> if it exists
+  //    This regex looks for the specific pattern you provided.
+  const wrapperRegex =
+    /^<p><span style="color: rgb\(\d+, \d+, \d+\);?">(.*)<\/span><\/p>$/s;
+  const match = processedHtml.match(wrapperRegex);
+  if (match && match[1]) {
+    processedHtml = match[1]; // Use the content inside the span
+  }
+
+  if (!processedHtml.trim()) {
+    return "<p>No detailed description available.</p>";
+  }
+  return processedHtml;
+}
 
 // --- Helper Components ---
 const LoadingState = () => (
   <div className="flex flex-col items-center justify-center min-h-screen bg-brandBackground dark:bg-slate-900 p-8 font-sans">
-    {/* Changed min-h-[calc(100vh-200px)] to min-h-screen as Navbar/Footer are removed */}
     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brandAccent mb-6"></div>
     <p className="text-xl font-medium text-brandTextSecondary dark:text-slate-400 font-body">
       Loading product details...
@@ -485,9 +524,22 @@ const LoadingState = () => (
 
 const ProductNotFoundState = ({ errorMsg }) => (
   <div className="flex flex-col items-center justify-center min-h-screen bg-brandBackground dark:bg-slate-900 p-8 font-sans">
-    {/* Changed min-h-[calc(100vh-200px)] to min-h-screen */}
     <div className="text-center">
-      <h1 className="text-3xl font-bold text-brandRed dark:text-red-400 font-header mb-4">
+      <svg
+        className="mx-auto h-12 w-12 text-brandRed dark:text-red-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      </svg>
+      <h1 className="mt-2 text-3xl font-bold text-brandRed dark:text-red-400 font-header mb-4">
         Product Not Found
       </h1>
       <p className="text-lg text-brandTextSecondary dark:text-slate-400 font-body mb-2">
@@ -508,44 +560,78 @@ const ProductNotFoundState = ({ errorMsg }) => (
   </div>
 );
 
-const StarRating = ({ rating, reviews }) => {
-  if (typeof rating !== "number" || rating < 0 || rating > 5) {
-    return null;
-  }
+const StarRating = ({ rating = 0, reviews = 0 }) => {
   const fullStars = Math.floor(rating);
-  const halfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
   return (
-    <div className="flex items-center space-x-1 text-amber-500">
-      {[...Array(fullStars)].map((_, i) => (
-        <svg
-          key={`full-${i}`}
-          className="w-5 h-5 fill-current"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 .5l2.939 5.455 6.572.955-4.756 4.635 1.123 6.545z" />
-        </svg>
-      ))}
-      {halfStar && (
-        <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 .5V12.39l-3.293 1.723.626-3.65L4.93 7.91l3.664-.532L10 3.86v8.532zM10 12.392V3.86l1.837 3.408 3.75.545-2.715 2.645.64 3.733z" />
-        </svg>
-      )}
-      {[...Array(emptyStars)].map((_, i) => (
-        <svg
-          key={`empty-${i}`}
-          className="w-5 h-5 fill-current text-slate-300 dark:text-slate-600"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 .5l2.939 5.455 6.572.955-4.756 4.635 1.123 6.545z" />
-        </svg>
-      ))}
-      {reviews !== undefined && reviews > 0 && (
-        <span className="ml-2 text-sm text-brandTextMuted dark:text-slate-400">
-          ({reviews} reviews)
+    <div className="flex items-center gap-2 mb-3">
+      <div className="flex">
+        {[...Array(fullStars)].map((_, i) => (
+          <svg
+            key={`star-full-${i}`}
+            className="w-5 h-5 text-yellow-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            {" "}
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />{" "}
+          </svg>
+        ))}
+        {hasHalfStar && (
+          <svg
+            className="w-5 h-5 text-yellow-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            {" "}
+            <defs>
+              {" "}
+              <linearGradient id="half">
+                {" "}
+                <stop offset="50%" stopColor="currentColor" />{" "}
+                <stop offset="50%" stopColor="#E5E7EB" />{" "}
+              </linearGradient>{" "}
+            </defs>{" "}
+            <path
+              fill="url(#half)"
+              d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+            />{" "}
+          </svg>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <svg
+            key={`star-empty-${i}`}
+            className="w-5 h-5 text-gray-300 dark:text-gray-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            {" "}
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />{" "}
+          </svg>
+        ))}
+      </div>
+      {reviews > 0 && (
+        <span className="text-sm text-brandTextSecondary dark:text-slate-400">
+          {" "}
+          ({reviews} {reviews === 1 ? "review" : "reviews"}){" "}
         </span>
       )}
+    </div>
+  );
+};
+
+const DetailItem = ({ label, value }) => {
+  if (!value || (Array.isArray(value) && value.length === 0)) return null;
+  return (
+    <div className="flex justify-between py-2 border-b border-slate-200 dark:border-slate-700 last:border-b-0">
+      <dt className="text-sm font-medium text-brandTextSecondary dark:text-slate-400">
+        {label}:
+      </dt>
+      <dd className="text-sm text-brandTextPrimary dark:text-slate-200 text-right">
+        {Array.isArray(value) ? value.join(", ") : value}
+      </dd>
     </div>
   );
 };
@@ -560,103 +646,118 @@ export default function ProductViewPage() {
   const [cartMessage, setCartMessage] = useState("");
   const dispatch = useCartDispatch();
 
-  const fetchProductDetails = async (productId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/products/${productId}`);
-      if (!response.ok) {
-        let errorData = {
-          message: `API error: ${response.status} ${response.statusText}`,
-        };
-        try {
-          const apiError = await response.json();
-          errorData.message =
-            apiError.message || apiError.error || errorData.message;
-          if (apiError.details) errorData.details = apiError.details;
-        } catch (e) {
-          console.warn(
-            "Could not parse error response as JSON from API for product ID:",
-            productId
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    const fetchProductDetails = async (productId) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/products/${productId}`);
+        if (!response.ok) {
+          let errorData = {
+            message: `API error: ${response.status} ${response.statusText}`,
+          };
+          try {
+            const apiError = await response.json();
+            errorData.message =
+              apiError.message || apiError.error || errorData.message;
+            if (apiError.details) errorData.details = apiError.details;
+          } catch (e) {
+            /* Ignore */
+          }
+          throw new Error(
+            errorData.message +
+              (errorData.details ? ` (${errorData.details})` : "")
           );
         }
-        let errorMessage = errorData.message;
-        if (errorData.details)
-          errorMessage += ` (Details: ${errorData.details})`;
-        throw new Error(errorMessage);
-      }
-      const data = await response.json();
+        const data = await response.json();
+        const productData = data.product || data;
 
-      if (data && data.product) {
-        setProduct(data.product);
-        setSelectedImage(
-          data.product.mainImage ||
-            (data.product.galleryImages && data.product.galleryImages[0]) ||
-            null
-        );
-      } else if (data && data.id) {
-        setProduct(data);
-        setSelectedImage(
-          data.mainImage ||
-            (data.galleryImages && data.galleryImages[0]) ||
-            null
-        );
-      } else {
-        throw new Error("Product data received from API is empty or invalid.");
+        if (productData && productData.id) {
+          setProduct(productData);
+          setSelectedImage(
+            productData.mainImage ||
+              (productData.galleryImages && productData.galleryImages[0]) ||
+              null
+          );
+        } else {
+          throw new Error(
+            "Product data received from API is empty or invalid."
+          );
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch product details:", fetchError);
+        setError(fetchError.message || "Could not load product details.");
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (fetchError) {
-      console.error("Failed to fetch product details:", fetchError);
-      setError(
-        fetchError.message ||
-          "Could not load product details. Please try again later."
-      );
-      setProduct(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) {
-      fetchProductDetails(id);
-    } else {
-      setLoading(false);
-    }
+    };
+    fetchProductDetails(id);
   }, [id]);
 
+  // Replace the placeholder cart handling functions with these:
   const handleAddToCart = () => {
-    if (!product) return;
-    dispatch({ type: "ADD_ITEM", payload: { ...product, quantity: 1 } });
-    setCartMessage("✅ Added to cart!");
+    if (!product || stockQuantity === 0) return;
+
+    dispatch({
+      type: "ADD_ITEM",
+      payload: {
+        id: product.id,
+        name: product.name,
+        price:
+          product.salePrice > product.price ? product.salePrice : product.price,
+        image: product.mainImage,
+        quantity: 1,
+        stockQuantity: product.stockQuantity,
+        sku: product.sku,
+      },
+    });
+
+    setCartMessage("✓ Added to cart successfully!");
     setTimeout(() => setCartMessage(""), 3000);
   };
 
   const handleOrderNow = () => {
-    if (!product) return;
-    dispatch({ type: "ADD_ITEM", payload: { ...product, quantity: 1 } });
+    if (!product || stockQuantity === 0) return;
+
+    dispatch({
+      type: "ADD_ITEM",
+      payload: {
+        id: product.id,
+        name: product.name,
+        price:
+          product.salePrice > product.price ? product.salePrice : product.price,
+        image: product.mainImage,
+        quantity: 1,
+        stockQuantity: product.stockQuantity,
+        sku: product.sku,
+      },
+    });
+
     router.push("/checkout");
   };
-
   const baseButtonClasses =
     "w-full sm:w-auto px-6 md:px-8 py-3 text-base font-semibold rounded-lg shadow-md focus:outline-none transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 focus:ring-4 focus:ring-opacity-50 font-body";
 
-  if (loading) {
-    return <LoadingState />;
-  }
+  if (loading) return <LoadingState />;
+  if (error || !product) return <ProductNotFoundState errorMsg={error} />;
 
-  if (error || !product) {
-    return <ProductNotFoundState errorMsg={error} />;
-  }
-
-  const currentPrice =
-    typeof product.price === "number" ? product.price.toFixed(2) : "N/A";
-  const originalPriceDisplay =
-    product.oldPrice && typeof product.oldPrice === "number"
-      ? product.oldPrice.toFixed(2)
-      : null;
   const stockQuantity =
     typeof product.stockQuantity === "number" ? product.stockQuantity : 0;
+  const cleanDetailedDescription = prepareHtmlForDisplay(
+    product.detailedDescription || product.description
+  );
+  const displayPrice =
+    product.salePrice > product.price
+      ? product.salePrice.toFixed(2)
+      : product.price.toFixed(2);
 
+  const originalPriceDisplay =
+    product.salePrice > product.price ? product.price.toFixed(2) : null;
   return (
     <>
       <Head>
@@ -665,12 +766,10 @@ export default function ProductViewPage() {
           name="description"
           content={
             product.shortDescription ||
-            (product.detailedDescription &&
-            typeof product.detailedDescription === "string"
-              ? product.detailedDescription
-                  .replace(/<[^>]*>?/gm, "")
-                  .substring(0, 155)
-              : `Details for ${product.name || "Product"}`)
+            cleanDetailedDescription
+              .replace(/<[^>]*>?/gm, "")
+              .substring(0, 155) ||
+            `Details for ${product.name || "Product"}`
           }
         />
         <meta
@@ -691,13 +790,9 @@ export default function ProductViewPage() {
         <meta property="og:type" content="product" />
       </Head>
 
-      {/* Main content wrapper, ensuring it takes full screen height if needed */}
       <div className="min-h-screen bg-brandBackground dark:bg-slate-900 font-sans">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          {" "}
-          {/* Added top/bottom padding here */}
-          {/* Breadcrumbs */}
-          <div className="mb-6 text-sm font-sans">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
+          <div className="mb-8 text-sm font-sans">
             <Link
               href="/"
               className="text-brandAccent hover:text-brandAccentHover transition-colors"
@@ -720,16 +815,21 @@ export default function ProductViewPage() {
               {product.name}
             </span>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
+
+          <div className="grid lg:grid-cols-2 gap-8 xl:gap-16 items-start">
+            {" "}
+            {/* Changed to lg:grid-cols-2 for more space */}
             {/* Image Gallery Section */}
-            <div className="flex flex-col items-center">
-              <div className="relative w-full aspect-[4/3] sm:aspect-square md:aspect-[4/3] bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div className="lg:sticky lg:top-8">
+              {" "}
+              {/* Make image gallery sticky on larger screens */}
+              <div className="relative w-full aspect-[4/3] bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-4">
                 <Image
                   src={selectedImage || product.mainImage || "/placeholder.png"}
                   alt={product.name || "Product Image"}
                   layout="fill"
                   objectFit="contain"
-                  className="transition-transform duration-300 ease-in-out hover:scale-105"
+                  className="transition-opacity duration-300 ease-in-out"
                   priority
                   onError={(e) => {
                     e.target.onerror = null;
@@ -740,14 +840,14 @@ export default function ProductViewPage() {
               {(product.mainImage ||
                 (product.galleryImages &&
                   product.galleryImages.length > 0)) && (
-                <div className="mt-4 flex space-x-2 overflow-x-auto py-2 justify-center">
+                <div className="flex flex-wrap justify-center gap-3 py-2">
                   {[product.mainImage, ...(product.galleryImages || [])]
                     .filter(Boolean)
                     .map((img, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImage(img)}
-                        className={`flex-shrink-0 w-20 h-20 relative rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brandAccentFocus ${
+                        className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 relative rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brandAccentFocus ${
                           selectedImage === img
                             ? "border-brandAccent shadow-lg ring-2 ring-brandAccentFocus ring-offset-2 dark:ring-offset-slate-900"
                             : "border-slate-300 dark:border-slate-600 hover:border-brandAccentFocus"
@@ -771,56 +871,62 @@ export default function ProductViewPage() {
                 </div>
               )}
             </div>
-
             {/* Product Details Section */}
             <div className="py-4 md:py-0">
               {product.brand && (
-                <p className="text-xs sm:text-sm font-semibold text-brandAccent dark:text-brandAccentFocus uppercase tracking-wider mb-1.5 font-body">
+                <p className="text-sm font-semibold text-brandAccent dark:text-brandAccentFocus uppercase tracking-wider mb-2 font-body">
                   {" "}
                   {product.brand}{" "}
                 </p>
               )}
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brandTextPrimary dark:text-brandBackground font-header mb-3">
+              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-brandTextPrimary dark:text-brandBackground font-header mb-4 leading-tight">
                 {" "}
                 {product.name}{" "}
               </h1>
-              {product.rating !== undefined && (
+              {typeof product.rating === "number" && (
                 <StarRating rating={product.rating} reviews={product.reviews} />
               )}
-              <div className="my-4 flex items-baseline space-x-3">
-                <p className="text-3xl sm:text-4xl font-bold text-brandAccent dark:text-brandAccentFocus">
-                  {" "}
-                  ৳{currentPrice}{" "}
+
+              <div className="my-5 flex items-baseline space-x-3">
+                <p
+                  className={`text-4xl font-bold ${
+                    originalPriceDisplay
+                      ? "text-brandAccent dark:text-brandAccentFocus"
+                      : "text-brandTextPrimary dark:text-brandBackground"
+                  }`}
+                >
+                  ৳{displayPrice}
                 </p>
                 {originalPriceDisplay && (
-                  <p className="text-lg sm:text-xl font-medium text-brandTextMuted dark:text-slate-500 line-through">
-                    {" "}
-                    ৳{originalPriceDisplay}{" "}
+                  <p className="text-xl font-medium text-brandTextMuted dark:text-slate-500 line-through">
+                    ৳{originalPriceDisplay}
                   </p>
                 )}
               </div>
+
               {product.shortDescription && (
                 <p className="text-md lg:text-lg leading-relaxed text-brandTextSecondary dark:text-slate-300 font-sans mb-6">
                   {" "}
                   {product.shortDescription}{" "}
                 </p>
               )}
+
               {stockQuantity > 0 ? (
-                <p className="mb-6 text-sm font-semibold text-green-600 dark:text-green-400 flex items-center">
+                <p className="mb-6 text-base font-semibold text-green-600 dark:text-green-400 flex items-center">
                   {" "}
                   <svg
-                    className="w-4 h-4 mr-1.5 fill-current"
+                    className="w-5 h-5 mr-2 fill-current"
                     viewBox="0 0 20 20"
                   >
                     <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"></path>
                   </svg>{" "}
-                  {stockQuantity} In Stock - Ready to Ship!{" "}
+                  {stockQuantity} In Stock{" "}
                 </p>
               ) : (
-                <p className="mb-6 text-sm font-semibold text-brandRed dark:text-red-400 flex items-center">
+                <p className="mb-6 text-base font-semibold text-brandRed dark:text-red-400 flex items-center">
                   {" "}
                   <svg
-                    className="w-4 h-4 mr-1.5 fill-current"
+                    className="w-5 h-5 mr-2 fill-current"
                     viewBox="0 0 20 20"
                   >
                     <path
@@ -832,6 +938,7 @@ export default function ProductViewPage() {
                   Out of Stock{" "}
                 </p>
               )}
+
               <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
                 <button
                   onClick={handleAddToCart}
@@ -856,56 +963,62 @@ export default function ProductViewPage() {
                   {cartMessage}{" "}
                 </p>
               )}
+
+              {/* Product Information Section */}
               <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 className="text-xl font-semibold text-brandTextSoft dark:text-slate-200 font-header mb-3">
-                  {" "}
-                  Product Description{" "}
-                </h2>
-                <div
-                  className="prose prose-sm sm:prose-base dark:prose-invert max-w-none font-body text-brandTextSecondary dark:text-slate-300"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      product.detailedDescription ||
-                      "<p>No detailed description available.</p>",
-                  }}
-                />
-                {product.specifications &&
-                  product.specifications.length > 0 && (
-                    <div className="mt-8">
-                      {" "}
-                      <h3 className="text-lg font-semibold text-brandTextSoft dark:text-slate-200 font-header mb-4">
-                        {" "}
-                        Specifications{" "}
-                      </h3>{" "}
-                      <div className="bg-white dark:bg-slate-800/50 shadow border border-slate-200 dark:border-slate-700 rounded-lg">
-                        {" "}
-                        <ul className="divide-y divide-slate-200 dark:divide-slate-700">
-                          {" "}
-                          {product.specifications.map((spec) => (
-                            <li
-                              key={spec.name}
-                              className="px-4 py-3 sm:px-6 grid grid-cols-3 gap-4 items-center"
-                            >
-                              {" "}
-                              <span className="text-sm font-medium text-brandTextSecondary dark:text-slate-400 col-span-1">
-                                {spec.name}
-                              </span>{" "}
-                              <span className="text-sm text-brandTextPrimary dark:text-slate-200 col-span-2">
-                                {spec.value}
-                              </span>{" "}
-                            </li>
-                          ))}{" "}
-                        </ul>{" "}
-                      </div>{" "}
-                    </div>
+                <h3 className="text-xl font-semibold text-brandTextSoft dark:text-slate-200 font-header mb-4">
+                  Product Information
+                </h3>
+                <dl className="space-y-2 text-sm">
+                  <DetailItem label="Category" value={product.category} />
+                  <DetailItem label="SKU" value={product.sku} />
+                  <DetailItem label="Material" value={product.material} />
+                  <DetailItem label="Available Sizes" value={product.sizes} />
+                  <DetailItem label="Available Colors" value={product.colors} />
+                  {product.weight && (
+                    <DetailItem
+                      label="Weight"
+                      value={`${product.weight} ${product.weightUnit || ""}`}
+                    />
                   )}
+                  <DetailItem
+                    label="Suitable For"
+                    value={product.suitableFor}
+                  />
+                  <DetailItem
+                    label="Safety Rating"
+                    value={product.safetyRating}
+                  />
+                  {/* Add other relevant fields here */}
+                </dl>
               </div>
             </div>
           </div>
+
+          {/* Full Description - Full Width Below */}
+          {cleanDetailedDescription &&
+            cleanDetailedDescription !==
+              "<p>No detailed description available.</p>" && (
+              <div className="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-slate-200 dark:border-slate-700">
+                <h2 className="text-2xl lg:text-3xl font-bold text-brandTextPrimary dark:text-brandBackground font-header mb-6">
+                  Detailed Description
+                </h2>
+                <div
+                  className="prose prose-base lg:prose-lg prose-slate dark:prose-invert max-w-none font-body text-brandTextSecondary dark:text-slate-300
+                           prose-headings:font-header prose-headings:text-brandTextPrimary dark:prose-headings:text-slate-100
+                           prose-strong:text-brandTextPrimary dark:prose-strong:text-slate-100
+                           prose-a:text-brandAccent hover:prose-a:text-brandAccentHover
+                           prose-ul:list-disc prose-ul:pl-5 prose-ul:my-4
+                           prose-li:my-1.5 prose-p:my-4"
+                  dangerouslySetInnerHTML={{ __html: cleanDetailedDescription }}
+                />
+              </div>
+            )}
+
+          {/* Related Products Section (Placeholder) */}
           <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-700">
             <h2 className="text-2xl sm:text-3xl font-bold text-center text-brandTextPrimary dark:text-brandBackground font-header mb-8">
-              {" "}
-              You Might Also Like{" "}
+              You Might Also Like
             </h2>
             <p className="text-center text-brandTextSecondary dark:text-slate-400">
               Related products will be shown here.
