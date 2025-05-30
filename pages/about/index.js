@@ -1,33 +1,36 @@
 // pages/about/index.js
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
-
-const demoTrainers = [
-  {
-    id: "t1",
-    name: "Md. Rahim Uddin",
-    specialization: "Judo Sensei",
-    bio: "7-time national champion and certified IJF coach with 10 years of teaching experience.",
-    photoUrl: "/images/trainers/rahim.jpg", // Ensure these paths are correct
-  },
-  {
-    id: "t2",
-    name: "Sara Begum",
-    specialization: "Karate Instructor",
-    bio: "Black belt 5th dan, former international competitor, passionate about youth development.",
-    photoUrl: "/images/trainers/sara.jpg", // Ensure these paths are correct
-  },
-  {
-    id: "t3",
-    name: "Anik Khan",
-    specialization: "Self-Defense Expert",
-    bio: "Ex-military hand-to-hand combat trainer, specializes in Krav Maga.",
-    photoUrl: "/images/trainers/anik.jpg", // Ensure these paths are correct
-  },
-];
+import { db } from "@/utils/firebase"; // Import your Firebase configuration
+import { collection, getDocs } from "firebase/firestore";
 
 export default function AboutPage() {
+  const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTrainers = async () => {
+      try {
+        const trainersCollection = collection(db, "trainers");
+        const trainerSnapshot = await getDocs(trainersCollection);
+        const trainerList = trainerSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTrainers(trainerList);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching trainers:", err);
+        setError("Failed to load trainers. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchTrainers();
+  }, []);
+
   return (
     <>
       <Head>
@@ -75,8 +78,10 @@ export default function AboutPage() {
             <h2 className="text-3xl font-semibold mb-10 md:mb-12 text-center text-brandTextPrimary dark:text-brandBackground font-header">
               Meet Our Expert Trainers
             </h2>
+            {loading && <p className="text-center">Loading trainers...</p>}
+            {error && <p className="text-center text-red-500">{error}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-              {demoTrainers.map((trainer) => (
+              {trainers.map((trainer) => (
                 <div
                   key={trainer.id}
                   className="bg-white dark:bg-brandTextSoft rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 p-6 text-center border border-slate-200 dark:border-slate-700 flex flex-col items-center"

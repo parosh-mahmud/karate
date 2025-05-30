@@ -1,7 +1,7 @@
 // pages/admin/gallery.js
 import React, { useState, useEffect, useRef } from "react";
-import AdminLayout from "../../components/admin/AdminLayout"; // Use the layout
-import { db, storage } from "../../utils/firebase"; // Adjust path if necessary
+import AdminLayout from "@/components/admin/AdminLayout"; // Use the layout
+import { db, storage } from "@/utils/firebase"; // Adjust path if necessary
 import {
   collection,
   addDoc,

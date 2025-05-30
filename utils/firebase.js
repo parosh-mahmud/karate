@@ -1,3 +1,4 @@
+//utils/firebase.js
 import { initializeApp, getApps } from "firebase/app";
 import {
   getAuth,
@@ -22,16 +23,6 @@ import {
   increment, // Add this
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-
-// const firebaseConfig = {
-//   apiKey: "AIzaSyBTBFBGTvxWVvTHQc3WDW1zY4GnL2EGcjA",
-//   authDomain: "jkcombat-27a89.firebaseapp.com",
-//   projectId: "jkcombat-27a89",
-//   storageBucket: "jkcombat-27a89.firebasestorage.app",
-//   messagingSenderId: "670524633825",
-//   appId: "1:670524633825:web:598e6fd1751912a244bda0",
-//   measurementId: "G-DBKVCBXP5B",
-// };
 
 const firebaseConfig = {
   apiKey: "AIzaSyAEEA-dH1ae0qog8Z_vD4Fj_-aLgzrsy0Y",

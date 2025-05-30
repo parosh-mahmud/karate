@@ -1,4 +1,5 @@
 // pages/index.js
+import { useState } from "react";
 import Head from "next/head";
 
 // Import Components
@@ -11,11 +12,15 @@ import BlogSection from "../components/blog";
 import Faq from "../components/faq";
 import Cta from "../components/cta";
 import PopupWidget from "../components/popupWidget";
-
+//  ←–– new imports for the calculators
+import BMRCalculator from "../components/calculators/BMRCalculator";
+import MacroCalculator from "../components/calculators/MacroCalculator";
+import BodyFatCalculator from "../components/calculators/BodyFat";
 // Data for Benefits
 import { benefitOne, benefitTwo } from "../components/data";
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState("bmr");
   return (
     <>
       <Head>
@@ -34,6 +39,80 @@ export default function Home() {
       */}
       <main className="font-sans bg-brandBackground dark:bg-brandTextPrimary">
         <Hero />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          {/* ←–– Left column: tabs + calculator forms */}
+          {/* ←–– Left column: tabs + calculator forms */}
+          <div>
+            {/* Tab navigation */}
+            <div className="flex justify-center rounded-lg overflow-hidden mb-6">
+              {[
+                { key: "bmr", label: "BMRCalculator" },
+                { key: "macro", label: "MacroCalculator" },
+                { key: "bodyfat", label: "Body Fat" },
+              ].map(({ key, label }, i) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={[
+                    "px-4 py-2 text-sm font-medium transition",
+                    activeTab === key
+                      ? "bg-brandAccent text-brandTextOnAccent"
+                      : "text-brandAccent hover:bg-brandAccentHover hover:text-white",
+                    i === 0 && "rounded-l-lg",
+                    i === 2 && "rounded-r-lg",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Active calculator */}
+            <div>
+              {activeTab === "bmr" && <BMRCalculator />}
+              {activeTab === "macro" && <MacroCalculator />}
+              {activeTab === "bodyfat" && <BodyFatCalculator />}
+            </div>
+          </div>
+
+          {/* ←–– Right column: instructions */}
+          {/* ←–– Right column: instructions */}
+          <div className="space-y-4 font-body text-brandTextSecondary">
+            <h2 className="text-3xl font-header text-brandTextPrimary">
+              <strong>Instantly Calculate Your BMR, Macros & Body Fat</strong>
+            </h2>
+            <p>
+              Unlock your fitness potential with our powerful calculators.
+              Understand your body's unique needs and optimize your training and
+              nutrition for peak performance.
+            </p>
+            <p>
+              <strong>BMR (Basal Metabolic Rate):</strong> Discover the baseline
+              energy your body expends at rest. This crucial metric informs your
+              daily caloric needs for weight management and overall health.
+            </p>
+            <p>
+              <strong>TDEE (Total Daily Energy Expenditure):</strong> Calculate
+              your total calorie burn based on your activity level. Accurately
+              estimate your energy needs to fuel your workouts and daily life.
+            </p>
+            <p>
+              <strong>Macros (Macronutrients):</strong> Fine-tune your nutrition
+              with personalized macronutrient ratios. Optimize your intake of
+              carbohydrates, proteins, and fats to support your specific fitness
+              goals.
+            </p>
+            <p>
+              <strong>Body Fat %:</strong> Monitor your body composition and
+              track your progress towards a healthier physique. A lower body fat
+              percentage is associated with improved fitness and reduced health
+              risks.
+            </p>
+          </div>
+        </div>
 
         <SectionTitle
           pretitle="Welcome to JK Combat Academy"
