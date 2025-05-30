@@ -1,6 +1,6 @@
 // pages/blog/index.js
 import { useState, useEffect } from "react";
-import BlogCard from "..//../components/blogs/BlogCard";
+import BlogCard from "../../components/blogs/BlogCard";
 import { db } from "@/utils/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
