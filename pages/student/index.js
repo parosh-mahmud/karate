@@ -1,46 +1,78 @@
 import { useEffect, useState } from "react";
-import { fetchAdmissionsByUser } from "../../utils/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { School, CheckCircle, Cancel } from "@mui/icons-material";
+import { db, collection, query, where, getDocs } from "../../utils/firebase"; // Import Firebase functions
 
 export default function StudentDashboard() {
   const [admissions, setAdmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    console.log("Current User:", user); // Log user to ensure it’s available
+    if (!authLoading) {
+      // Only fetch data if authentication is not loading
+      if (user) {
+        console.log("User authenticated:", user);
+        const fetchData = async () => {
+          setLoading(true);
+          try {
+            const admissionsRef = collection(db, "admissions");
+            const q = query(admissionsRef, where("uid", "==", user.uid));
+            const querySnapshot = await getDocs(q);
 
-    if (user) {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          console.log("Fetching admissions for user:", user.uid);
-          const userAdmissions = await fetchAdmissionsByUser(user.uid);
-          console.log("Fetched admissions:", userAdmissions); // Log the fetched admissions
-          setAdmissions(userAdmissions);
-        } catch (error) {
-          console.error("Error loading admissions:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
+            const userAdmissions = querySnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
 
-      fetchData();
-    } else {
-      setLoading(false); // If no user, we stop loading to avoid infinite "Loading..."
+            setAdmissions(userAdmissions);
+          } catch (error) {
+            console.error("Error loading admissions:", error);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchData();
+      } else {
+        setLoading(false);
+        setAdmissions([]); // Clear admissions if no user
+      }
     }
-  }, [user]);
+  }, [user, authLoading]);
+
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-lg font-semibold">Loading authentication...</p>
+      </div>
+    );
+  }
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-lg font-semibold">Loading admissions...</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 mt-6">
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-8">
-        <Header user={user} />
-        <AdmissionDetails admissions={admissions} />
+        {user ? (
+          <>
+            <Header user={user} />
+            <AdmissionDetails admissions={admissions} />
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="text-lg font-semibold">
+              Please log in to view your dashboard.
+            </p>
+            {/* Add a login button/link here if needed */}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -78,11 +110,11 @@ function AdmissionDetails({ admissions }) {
 
 function StudentAdmissionCard({ admission }) {
   return (
-    <div className="bg-gray-50 rounded-lg shadow-lg p-6 mt-4 border border-gray-200 relative">
+    <div className="bg-white rounded-lg shadow-md p-6 mt-4 border border-gray-200 relative">
       <img
         src={admission.picture}
         alt="Student Picture"
-        className="w-32 h-20 object-cover border border-gray-300 absolute top-4 right-4"
+        className="w-32 h-20 object-cover border border-gray-300 absolute top-4 right-4 rounded-md"
       />
       <div className="flex items-center space-x-4">
         <div className="flex-1">
@@ -90,16 +122,23 @@ function StudentAdmissionCard({ admission }) {
             Student ID: {admission.studentId}
           </h4>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium text-white ${
-              admission.status === "approved" ? "bg-green-500" : "bg-red-500"
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              admission.status === "approved"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
             }`}
           >
             {admission.status === "approved" ? (
-              <CheckCircle className="mr-1" />
+              <>
+                <CheckCircle className="mr-1 text-green-500" fontSize="small" />
+                Approved
+              </>
             ) : (
-              <Cancel className="mr-1" />
+              <>
+                <Cancel className="mr-1 text-red-500" fontSize="small" />
+                Pending
+              </>
             )}
-            {admission.status === "approved" ? "Approved" : "Pending"}
           </span>
         </div>
       </div>
@@ -127,8 +166,8 @@ function StudentAdmissionCard({ admission }) {
 function InfoField({ label, value }) {
   return (
     <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-md font-medium text-gray-900">{value}</p>
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <p className="text-md text-gray-800">{value || "N/A"}</p>
     </div>
   );
 }

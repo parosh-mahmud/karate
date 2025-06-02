@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { onAuthStateChanged } from "firebase/auth";
-
 import {
   db,
   collection,
@@ -13,8 +12,11 @@ import {
   getDoc,
   updateDoc,
   auth,
-} from "../../utils/firebase"; // Corrected path
-
+  storage, // Import storage
+  ref, // Import ref
+  uploadBytesResumable, // Import uploadBytesResumable
+  getDownloadURL, // Import getDownloadURL
+} from "@/lib/firebase";
 import {
   InfoOutlined,
   PaymentOutlined,
@@ -26,121 +28,119 @@ export default function AdmissionForm() {
   const [submitMessage, setSubmitMessage] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0); // Note: This state needs to be updated during upload for the progress bar to reflect changes.
+  const [uploadProgress, setUploadProgress] = useState(0);
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset, // Added reset from react-hook-form
+    reset,
   } = useForm();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("Current User:", user);
-        setCurrentUser(user);
-      } else {
-        console.log("No user is signed in");
-        setCurrentUser(null);
-      }
+      setCurrentUser(user);
     });
     return () => unsubscribe();
   }, []);
 
   const onSubmit = async (formData) => {
     if (!currentUser) {
-      alert("Please sign in to submit the form."); // Consider a more styled modal/toast here
+      alert("Please sign in to submit the form.");
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitMessage(""); // Clear previous messages
+    setSubmitMessage("");
     let imageUrl = "";
 
     try {
       if (formData.picture && formData.picture[0]) {
         const file = formData.picture[0];
-        const reader = new FileReader();
+        const storageRef = ref(
+          storage,
+          `admission-images/${currentUser.uid}/${file.name}`
+        );
+        const uploadTask = uploadBytesResumable(storageRef, file);
 
-        // Simulate progress for demo; replace with actual progress logic if available
-        setUploadProgress(0);
-        let currentProgress = 0;
-        const progressInterval = setInterval(() => {
-          currentProgress += 10;
-          if (currentProgress <= 100) {
-            setUploadProgress(currentProgress);
-          } else {
-            clearInterval(progressInterval);
-          }
-        }, 100); // Adjust timing for simulation
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          },
+          (error) => {
+            console.error("Error uploading image:", error);
+            setSubmitMessage("Failed to upload image. Please try again.");
+            setIsSubmitting(false);
+            return;
+          },
+          async () => {
+            imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
 
-        const imageUploadPromise = new Promise((resolve, reject) => {
-          reader.onloadend = async () => {
-            const base64Image = reader.result;
-            try {
-              const response = await fetch("/api/upload", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: base64Image }),
-              });
+            const finalFormData = {
+              ...formData,
+              picture: imageUrl,
+            };
 
-              if (response.ok) {
-                const data = await response.json();
-                imageUrl = data.url;
-                setUploadProgress(100); // Ensure progress is 100 on success
-                clearInterval(progressInterval);
-                resolve();
-              } else {
-                clearInterval(progressInterval);
-                setUploadProgress(0); // Reset progress on failure
-                reject("Failed to upload image. Please try again.");
-              }
-            } catch (error) {
-              clearInterval(progressInterval);
-              setUploadProgress(0);
-              console.error("Error uploading image:", error);
-              reject("An error occurred while uploading the image.");
+            // Send to your API endpoint
+            const response = await fetch("/api/admission", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                formData: finalFormData,
+                uid: currentUser.uid,
+              }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              setSubmitMessage("Form submitted successfully!");
+              reset();
+              setImagePreview(null);
+            } else {
+              setSubmitMessage("Failed to submit form. Please try again.");
             }
-          };
-          reader.onerror = () => {
-            clearInterval(progressInterval);
-            setUploadProgress(0);
-            reject("Error reading the image file.");
-          };
-          reader.readAsDataURL(file);
-        });
-        await imageUploadPromise;
-      }
-
-      const finalFormData = {
-        ...formData,
-        picture: imageUrl,
-      };
-
-      const response = await fetch("/api/saveFormdata", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formData: finalFormData,
-          uid: currentUser.uid,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setSubmitMessage("Form submitted successfully!");
-        reset(); // Reset form fields on success
-        setImagePreview(null); // Clear image preview
+            setIsSubmitting(false);
+          }
+        );
       } else {
-        setSubmitMessage("Failed to submit form. Please try again.");
+        const finalFormData = {
+          ...formData,
+          picture: imageUrl,
+        };
+
+        // Send to your API endpoint
+        const response = await fetch("/api/admission", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            formData: finalFormData,
+            uid: currentUser.uid,
+          }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          setSubmitMessage("Form submitted successfully!");
+          reset();
+          setImagePreview(null);
+        } else {
+          setSubmitMessage("Failed to submit form. Please try again.");
+        }
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
       setSubmitMessage(error.message || "An error occurred. Please try again.");
+      setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
       if (!submitMessage.includes("successfully")) {
-        // Don't reset progress if submission failed mid-upload
         setUploadProgress(0);
       }
     }
@@ -154,30 +154,32 @@ export default function AdmissionForm() {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
-      setUploadProgress(0); // Reset progress when a new file is selected
-      setSubmitMessage(""); // Clear submission message
+      setUploadProgress(0);
+      setSubmitMessage("");
     } else {
       setImagePreview(null);
     }
   };
 
   const commonInputClassName =
-    "mt-1 block w-full border border-trueGray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-brandBlue focus:border-brandBlue sm:text-sm font-body";
-  const labelClassName = "block text-sm font-medium text-primary font-body";
-  const errorClassName = "mt-2 text-sm text-brandRed font-body";
+    "mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-brandAccentFocus focus:border-brandAccent sm:text-sm font-body bg-white dark:bg-slate-800 text-brandTextPrimary dark:text-slate-200";
+  const labelClassName =
+    "block text-sm font-medium text-brandTextPrimary dark:text-slate-200 font-body";
+  const errorClassName =
+    "mt-2 text-sm text-red-600 dark:text-red-400 font-body";
 
   return (
-    <div className="min-h-screen bg-neutral py-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-brandBackground dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-primary sm:text-4xl font-header">
+          <h2 className="text-3xl font-extrabold text-brandTextPrimary dark:text-brandBackground sm:text-4xl font-header">
             JK Combat Academy Admission Form
           </h2>
-          <p className="mt-4 text-lg text-trueGray-700 font-body">
+          <p className="mt-4 text-lg text-brandTextSecondary dark:text-slate-400 font-body">
             Join our elite training program and unleash your potential
           </p>
         </div>
-        <div className="bg-white shadow-xl overflow-hidden sm:rounded-lg">
+        <div className="bg-white dark:bg-slate-800 shadow-xl overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6 md:p-8">
             <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
               {/* Left Section - Form Fields */}
@@ -507,7 +509,7 @@ export default function AdmissionForm() {
                       id="picture"
                       {...register("picture")}
                       accept="image/*"
-                      className="mt-1 block w-full text-sm text-trueGray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brandBlue/10 file:text-brandBlue hover:file:bg-brandBlue/20 cursor-pointer font-body"
+                      className="mt-1 block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brandAccent/10 file:text-brandAccent hover:file:bg-brandAccent/20 cursor-pointer font-body"
                       onChange={handleImageUpload}
                     />
                     {errors.picture && (
@@ -519,17 +521,17 @@ export default function AdmissionForm() {
                         <img
                           src={imagePreview}
                           alt="Image Preview"
-                          className="w-32 h-32 object-cover rounded-md border border-trueGray-300"
+                          className="w-32 h-32 object-cover rounded-md border border-slate-300 dark:border-slate-700"
                         />
                       </div>
                     )}
 
                     {isSubmitting &&
                       formData.picture &&
-                      formData.picture[0] && ( // Only show progress if a picture is being submitted
-                        <div className="mt-4 w-full bg-trueGray-200 rounded-full h-2.5">
+                      formData.picture[0] && (
+                        <div className="mt-4 w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
                           <div
-                            className="bg-brandBlue h-2.5 rounded-full transition-all duration-300 ease-out"
+                            className="bg-brandAccent h-2.5 rounded-full transition-all duration-300 ease-out"
                             style={{ width: `${uploadProgress}%` }}
                           ></div>
                         </div>
@@ -582,7 +584,7 @@ export default function AdmissionForm() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-neutral bg-secondary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-60 disabled:cursor-not-allowed font-header transition-colors duration-300"
+                      className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus disabled:opacity-60 disabled:cursor-not-allowed font-header transition-colors duration-300"
                     >
                       {isSubmitting ? "Submitting..." : "Submit Application"}
                     </button>
@@ -592,8 +594,8 @@ export default function AdmissionForm() {
                   <div
                     className={`mt-6 p-4 rounded-md text-center ${
                       submitMessage.includes("successfully")
-                        ? "bg-brandGreen/20 text-emerald-800"
-                        : "bg-brandRed/10 text-brandRed"
+                        ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400"
+                        : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400"
                     }`}
                   >
                     <p className="font-medium font-body">{submitMessage}</p>
@@ -601,37 +603,43 @@ export default function AdmissionForm() {
                 )}
               </div>
 
-              {/* Right Section - Payment Instructions */}
-              <div className="bg-trueGray-50 p-6 rounded-lg lg:sticky lg:top-12">
-                {" "}
-                {/* Made sticky for better UX on larger screens */}
-                <h3 className="text-xl font-semibold text-primary mb-6 font-header">
+              {/* Right Section - Important Information */}
+              <div className="bg-slate-50 dark:bg-slate-700 p-6 rounded-lg lg:sticky lg:top-12">
+                <h3 className="text-xl font-semibold text-brandTextPrimary dark:text-brandBackground mb-6 font-header">
                   Important Information
                 </h3>
                 <ul className="space-y-6">
                   <li className="flex items-start">
-                    <InfoOutlined className="flex-shrink-0 h-6 w-6 text-brandBlue mr-3 mt-0.5" />
-                    <p className="text-sm text-trueGray-700 font-body">
+                    <InfoOutlined className="flex-shrink-0 h-6 w-6 text-brandAccent mr-3 mt-0.5" />
+                    <p className="text-sm text-brandTextSecondary dark:text-slate-400 font-body">
                       Please ensure all information provided is accurate and
                       up-to-date. Incomplete applications may delay the
                       admission process.
                     </p>
                   </li>
                   <li className="flex items-start">
-                    <PaymentOutlined className="flex-shrink-0 h-6 w-6 text-brandBlue mr-3 mt-0.5" />
-                    <div className="text-sm text-trueGray-700 font-body">
-                      <p className="font-semibold text-primary mb-1">
+                    <PaymentOutlined className="flex-shrink-0 h-6 w-6 text-brandAccent mr-3 mt-0.5" />
+                    <div className="text-sm text-brandTextSecondary dark:text-slate-400 font-body">
+                      <p className="font-semibold text-brandTextPrimary dark:text-brandBackground mb-1">
                         Payment Details:
                       </p>
                       To complete the application, please send a non-refundable
                       application fee of{" "}
-                      <strong className="text-primary">BDT 21500</strong> via{" "}
-                      <strong className="text-primary">Bkash</strong> or{" "}
-                      <strong className="text-primary">Nagad</strong> to the
-                      number{" "}
-                      <strong className="text-secondary">01985540923</strong>.
+                      <strong className="text-brandTextPrimary dark:text-brandBackground">
+                        BDT 21500
+                      </strong>{" "}
+                      via{" "}
+                      <strong className="text-brandTextPrimary dark:text-brandBackground">
+                        Bkash
+                      </strong>{" "}
+                      or{" "}
+                      <strong className="text-brandTextPrimary dark:text-brandBackground">
+                        Nagad
+                      </strong>{" "}
+                      to the number{" "}
+                      <strong className="text-brandAccent">01985540923</strong>.
                       <br /> <br />
-                      <strong className="text-primary">
+                      <strong className="text-brandTextPrimary dark:text-brandBackground">
                         Instructions:
                       </strong>{" "}
                       Send the amount, then note down the transaction ID. Enter
@@ -639,20 +647,20 @@ export default function AdmissionForm() {
                     </div>
                   </li>
                   <li className="flex items-start">
-                    <SchoolOutlined className="flex-shrink-0 h-6 w-6 text-brandBlue mr-3 mt-0.5" />
-                    <p className="text-sm text-trueGray-700 font-body">
+                    <SchoolOutlined className="flex-shrink-0 h-6 w-6 text-brandAccent mr-3 mt-0.5" />
+                    <p className="text-sm text-brandTextSecondary dark:text-slate-400 font-body">
                       Course details and schedules will be provided upon
                       successful application. Be prepared for an intensive
                       training regimen.
                     </p>
                   </li>
                 </ul>
-                <div className="mt-8 p-4 bg-accent/10 rounded-md border border-accent/30">
-                  <h4 className="text-base font-semibold text-amber-800 mb-2 font-header flex items-center">
-                    <InfoOutlined className="h-5 w-5 mr-2 text-amber-700" />
+                <div className="mt-8 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-700">
+                  <h4 className="text-base font-semibold text-amber-800 dark:text-amber-400 mb-2 font-header flex items-center">
+                    <InfoOutlined className="h-5 w-5 mr-2 text-amber-700 dark:text-amber-400" />
                     Health Notice
                   </h4>
-                  <p className="text-sm text-amber-700 font-body">
+                  <p className="text-sm text-amber-700 dark:text-amber-400 font-body">
                     Applicants must be in good physical condition. A medical
                     clearance may be required before starting the program.
                   </p>

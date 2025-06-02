@@ -1,7 +1,7 @@
 // components/Navbar.js
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -36,7 +36,9 @@ export default function Navbar() {
   const router = useRouter();
   const { items: cartItems } = useCartState();
   const { currentUser, loading, logout } = useAuth();
-
+  useEffect(() => {
+    console.log("Current User:", currentUser);
+  }, [currentUser]);
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 50); // Trigger a bit later for a more noticeable effect
   }, []);
