@@ -1,5 +1,6 @@
+// pages/blog/index.js
 import { useState, useEffect } from "react";
-import BlogCard from "@/components/blogs/BlogCard";
+import Link from "next/link";
 import { db } from "@/utils/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import Head from "next/head";
@@ -20,8 +21,8 @@ const BlogPage = () => {
           ...doc.data(),
         }));
         setBlogs(blogsData);
-      } catch (error) {
-        console.error("Error fetching blogs:", error);
+      } catch (err) {
+        console.error("Error fetching blogs:", err);
         setError("Failed to load blogs. Please try again later.");
       } finally {
         setLoading(false);
@@ -71,11 +72,55 @@ const BlogPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogs.map((blog) => (
-              <BlogCard
+              <article
                 key={blog.id}
-                blog={blog}
-                className="transform transition-transform hover:scale-105"
-              />
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105"
+              >
+                {blog.image && (
+                  <div className="relative h-48 w-full">
+                    <img
+                      src={blog.image}
+                      alt={blog.title}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                )}
+
+                <div className="p-6">
+                  <h2 className="text-2xl font-semibold text-brandTextPrimary dark:text-brandBackground mb-2">
+                    {blog.title}
+                  </h2>
+
+                  <p className="text-brandTextSecondary dark:text-slate-400 mb-4 line-clamp-3">
+                    {blog.description}
+                  </p>
+
+                  <div className="flex items-center text-sm text-brandTextMuted dark:text-slate-500 mb-4">
+                    <span>By {blog.author || "Unknown"}</span>
+                    <span className="mx-2">•</span>
+                    <span>
+                      {blog.createdAt
+                        ? new Date(blog.createdAt.toDate()).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )
+                        : ""}
+                    </span>
+                  </div>
+
+                  {/* <Link> no longer wraps an <a>—we pass className directly to <Link> */}
+                  <Link
+                    href={`/blog/${blog.id}`}
+                    className="inline-block px-4 py-2 bg-brandAccent text-white rounded hover:bg-brandAccentDark transition-colors"
+                  >
+                    Read More
+                  </Link>
+                </div>
+              </article>
             ))}
           </div>
         )}

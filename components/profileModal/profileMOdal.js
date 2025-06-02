@@ -2,23 +2,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image"; // For Next.js optimized images if needed, or standard img
-import { useAuth } from "@/context/AuthContext"; // Assuming path alias is configured
-
-// Firebase imports (client-side)
-import { auth, db, storage } from "../../utils/firebase"; // Adjust path as needed
+import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
+import { auth, db } from "../../utils/firebase";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-// Note: storage and uploadBytes/getDownloadURL were in your original imports but not used in the provided logic for Cloudinary upload.
-// If you switch to Firebase Storage for profile pics, you'd use them.
 import { updateProfile } from "firebase/auth";
-
-// Heroicons (assuming v1 outline style)
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "../../utils/firebase";
 import {
   XIcon,
-  PencilIcon, // Edit
-  SaveIcon, // Save
-  CameraIcon, // PhotoCamera
-  UserCircleIcon, // Fallback avatar
+  PencilIcon,
+  SaveIcon,
+  CameraIcon,
+  UserCircleIcon,
 } from "@heroicons/react/outline";
 
 const Spinner = ({ size = "w-5 h-5", color = "border-white" }) => (
@@ -28,37 +24,38 @@ const Spinner = ({ size = "w-5 h-5", color = "border-white" }) => (
 );
 
 export default function ProfileModal({ open, onClose }) {
-  const { currentUser } = useAuth(); // Get currentUser from AuthContext
+  const { currentUser } = useAuth();
 
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
-    displayName: "", // Add displayName for consistency with Firebase Auth
+    displayName: "",
     email: "",
     age: "",
     gender: "",
     dateOfBirth: "",
-    profilePicture: "", // This will hold the URL
-    phoneNumber: "", // Added phone number
-    bio: "", // Added bio
+    profilePicture: "",
+    phoneNumber: "",
+    bio: "",
   });
-  const [formData, setFormData] = useState({ ...userData }); // Add this line
+  const [formData, setFormData] = useState({ ...userData });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [file, setFile] = useState(null); // For new profile picture file
-
-  const [filePreview, setFilePreview] = useState(null); // For new profile picture preview
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
 
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (open && currentUser) {
       setLoading(true);
+
       const fetchUserData = async () => {
         try {
           const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
+
           if (docSnap.exists()) {
             const dbData = docSnap.data();
             const initialData = {
@@ -75,14 +72,16 @@ export default function ProfileModal({ open, onClose }) {
               bio: dbData.bio || "",
             };
             setUserData(initialData);
-            setFormData(initialData); // Initialize formData here
+            setFormData(initialData);
+            setFilePreview(initialData.profilePicture);
           }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+        } catch (err) {
+          console.error("Error fetching user data:", err);
         } finally {
           setLoading(false);
         }
       };
+
       fetchUserData();
     }
   }, [open, currentUser]);
@@ -92,13 +91,12 @@ export default function ProfileModal({ open, onClose }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add cancel handler
   const handleCancel = (e) => {
-    e.preventDefault(); // Prevent any form submission
+    e.preventDefault();
     setIsEditing(false);
     setFile(null);
     setFilePreview(userData.profilePicture || currentUser?.photoURL || "");
-    setFormData({ ...userData }); // Reset form data to original user data
+    setFormData({ ...userData });
   };
 
   const handleFileChange = (e) => {
@@ -118,70 +116,83 @@ export default function ProfileModal({ open, onClose }) {
     if (!currentUser) return;
     setIsLoading(true);
 
-    let newProfilePictureURL = userData.profilePicture; // Keep existing if no new file
-
     try {
+      let newProfilePictureURL = userData.profilePicture;
+
+      // Handle file upload if a new image is selected
       if (file) {
-        // Convert file to Base64 for sending to API
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
+        const formData = new FormData();
+        formData.append("image", file);
+
+        // First, upload the image to your storage
+        const storageRef = ref(
+          storage,
+          `profile-images/${currentUser.uid}/${file.name}`
+        );
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        // Wait for the upload to complete
         await new Promise((resolve, reject) => {
-          reader.onload = resolve;
-          reader.onerror = reject;
-        });
-        const base64Image = reader.result;
-
-        // Send image to Cloudinary (or your chosen service) via your API route
-        const response = await fetch("/api/upload", {
-          // Assuming this API route handles Cloudinary upload
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64Image }), // API expects { image: base64string }
-        });
-        const data = await response.json();
-
-        if (response.ok && data.url) {
-          newProfilePictureURL = data.url;
-        } else {
-          console.error(
-            "Error uploading image via /api/upload:",
-            data.error || "Unknown error"
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              // You can handle progress updates here if needed
+              const progress =
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              console.log("Upload progress:", progress);
+            },
+            (error) => {
+              console.error("Upload error:", error);
+              reject(error);
+            },
+            async () => {
+              // Get the download URL
+              try {
+                const downloadURL = await getDownloadURL(
+                  uploadTask.snapshot.ref
+                );
+                newProfilePictureURL = downloadURL;
+                resolve();
+              } catch (error) {
+                reject(error);
+              }
+            }
           );
-          throw new Error(data.error || "Image upload failed.");
-        }
+        });
       }
 
-      // Prepare data for Firebase Auth and Firestore
-      const newDisplayName =
-        `${formData.firstName} ${formData.lastName}`.trim() ||
-        formData.displayName;
-      // Update Firebase Auth profile
+      // Update auth profile
       await updateProfile(auth.currentUser, {
-        displayName: newDisplayName,
+        displayName: formData.displayName,
         photoURL: newProfilePictureURL,
       });
 
-      // Update Firestore user document
+      // Update Firestore document
       const userDocRef = doc(db, "users", currentUser.uid);
       const dataToUpdate = {
         ...formData,
-        displayName: newDisplayName,
         profilePicture: newProfilePictureURL,
         updatedAt: serverTimestamp(),
       };
+
       await updateDoc(userDocRef, dataToUpdate);
 
       // Update local state
-      setUserData(dataToUpdate);
-      setFormData(dataToUpdate);
+      setUserData((prev) => ({
+        ...prev,
+        ...dataToUpdate,
+      }));
+      setFormData((prev) => ({
+        ...prev,
+        ...dataToUpdate,
+      }));
       setIsEditing(false);
       setFile(null);
 
-      // TODO: Add success snackbar/toast
+      // Show success message
       alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      // TODO: Add error snackbar/toast
       alert(`Error updating profile: ${error.message}`);
     } finally {
       setIsLoading(false);
@@ -197,12 +208,12 @@ export default function ProfileModal({ open, onClose }) {
 
   return (
     <>
-      {/* Modal Backdrop */}
+      {/* Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
         aria-hidden="true"
         onClick={onClose}
-      ></div>
+      />
 
       {/* Modal Panel */}
       <div
@@ -212,7 +223,7 @@ export default function ProfileModal({ open, onClose }) {
         aria-labelledby="profile-modal-title"
       >
         <div className="relative bg-brandBackground dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
-          {/* Modal Header */}
+          {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
             <h2
               id="profile-modal-title"
@@ -229,96 +240,189 @@ export default function ProfileModal({ open, onClose }) {
             </button>
           </div>
 
-          {/* Modal Content */}
+          {/* Content */}
           <div className="p-4 sm:p-6 space-y-6 overflow-y-auto">
-            {loading && !userData.email ? ( // Show main loader only if initial data isn't there yet
+            {loading && !userData.email ? (
               <div className="flex justify-center items-center py-10">
                 <Spinner size="w-8 h-8" color="border-brandAccent" />
               </div>
             ) : (
               <>
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="relative group">
-                    {filePreview || userData.profilePicture ? (
-                      <Image
-                        src={filePreview || userData.profilePicture}
-                        alt="Profile Picture"
-                        width={128}
-                        height={128}
-                        className="rounded-full object-cover w-32 h-32 border-4 border-white dark:border-slate-700 shadow-md"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/default-profile.png";
-                        }} // Fallback
-                      />
-                    ) : (
-                      <UserCircleIcon className="w-32 h-32 text-slate-400 dark:text-slate-500" />
-                    )}
-                    {isEditing && (
-                      <label
-                        htmlFor="profile-picture-upload"
-                        className="absolute bottom-0 right-0 bg-brandAccent text-white p-2 rounded-full cursor-pointer hover:bg-brandAccentHover shadow-md transition-colors"
-                        title="Change profile picture"
+                {/* ────────── Static View (read‐only) ────────── */}
+                {!isEditing && (
+                  <>
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="relative">
+                        {filePreview || userData.profilePicture ? (
+                          <Image
+                            src={filePreview || userData.profilePicture}
+                            alt="Profile Picture"
+                            width={128}
+                            height={128}
+                            className="rounded-full object-cover w-32 h-32 border-4 border-white dark:border-slate-700 shadow-md"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "/default-profile.png";
+                            }}
+                          />
+                        ) : (
+                          <UserCircleIcon className="w-32 h-32 text-slate-400 dark:text-slate-500" />
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-xl font-semibold text-brandTextPrimary dark:text-slate-100 font-header">
+                          {userData.displayName ||
+                            `${userData.firstName} ${userData.lastName}` ||
+                            "User Name"}
+                        </h3>
+                        <p className="text-sm text-brandTextSecondary dark:text-slate-400">
+                          {userData.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className={labelBaseClasses}>First Name</label>
+                        <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                          {userData.firstName || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className={labelBaseClasses}>Last Name</label>
+                        <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                          {userData.lastName || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className={labelBaseClasses}>Display Name</label>
+                        <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                          {userData.displayName || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className={labelBaseClasses}>Phone Number</label>
+                        <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                          {userData.phoneNumber || "—"}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className={labelBaseClasses}>Age</label>
+                          <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                            {userData.age || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className={labelBaseClasses}>Gender</label>
+                          <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                            {userData.gender || "—"}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelBaseClasses}>
+                          Date of Birth
+                        </label>
+                        <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                          {userData.dateOfBirth || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className={labelBaseClasses}>
+                          Bio / About Me
+                        </label>
+                        <p className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-brandTextPrimary dark:text-slate-100">
+                          {userData.bio || "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Edit Profile Button (outside any form!) */}
+                    <div className="pt-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors"
                       >
-                        <CameraIcon className="w-5 h-5" />
+                        <PencilIcon className="w-5 h-5 mr-2" />
+                        Edit Profile
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* ────────── Editing View (with form) ────────── */}
+                {isEditing && (
+                  <form
+                    onSubmit={handleSaveChanges}
+                    className="space-y-4"
+                    noValidate
+                  >
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="relative">
+                        {filePreview || userData.profilePicture ? (
+                          <Image
+                            src={filePreview || userData.profilePicture}
+                            alt="Profile Picture"
+                            width={128}
+                            height={128}
+                            className="rounded-full object-cover w-32 h-32 border-4 border-white dark:border-slate-700 shadow-md"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "/default-profile.png";
+                            }}
+                          />
+                        ) : (
+                          <UserCircleIcon className="w-32 h-32 text-slate-400 dark:text-slate-500" />
+                        )}
+                        <label
+                          htmlFor="profile-picture-upload"
+                          className="absolute bottom-0 right-0 bg-brandAccent text-white p-2 rounded-full cursor-pointer hover:bg-brandAccentHover shadow-md transition-colors"
+                          title="Change profile picture"
+                        >
+                          <CameraIcon className="w-5 h-5" />
+                          <input
+                            id="profile-picture-upload"
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="firstName" className={labelBaseClasses}>
+                          First Name
+                        </label>
                         <input
-                          id="profile-picture-upload"
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileChange}
+                          type="text"
+                          name="firstName"
+                          id="firstName"
+                          value={formData.firstName || ""}
+                          onChange={handleInputChange}
+                          className={inputBaseClasses}
                         />
-                      </label>
-                    )}
-                  </div>
-                  {!isEditing && (
-                    <div className="text-center">
-                      <h3 className="text-xl font-semibold text-brandTextPrimary dark:text-slate-100 font-header">
-                        {userData.displayName ||
-                          `${userData.firstName} ${userData.lastName}` ||
-                          "User Name"}
-                      </h3>
-                      <p className="text-sm text-brandTextSecondary dark:text-slate-400">
-                        {userData.email}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <form onSubmit={handleSaveChanges} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="firstName" className={labelBaseClasses}>
-                        First Name
-                      </label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        id="firstName"
-                        value={formData.firstName || ""}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className={inputBaseClasses}
-                      />
+                      </div>
+                      <div>
+                        <label htmlFor="lastName" className={labelBaseClasses}>
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          name="lastName"
+                          id="lastName"
+                          value={formData.lastName || ""}
+                          onChange={handleInputChange}
+                          className={inputBaseClasses}
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label htmlFor="lastName" className={labelBaseClasses}>
-                        Last Name
-                      </label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        id="lastName"
-                        value={formData.lastName || ""}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className={inputBaseClasses}
-                      />
-                    </div>
-                  </div>
-                  {isEditing && ( // Only show display name editing if in edit mode, as it's derived
                     <div>
                       <label htmlFor="displayName" className={labelBaseClasses}>
                         Display Name (Public)
@@ -329,143 +433,132 @@ export default function ProfileModal({ open, onClose }) {
                         id="displayName"
                         value={formData.displayName || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
                         className={inputBaseClasses}
                       />
                     </div>
-                  )}
-                  <div>
-                    <label htmlFor="email" className={labelBaseClasses}>
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      value={userData.email}
-                      disabled
-                      className={`${inputBaseClasses} bg-slate-100 dark:bg-slate-700/50 cursor-not-allowed`}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="phoneNumber" className={labelBaseClasses}>
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      id="phoneNumber"
-                      value={formData.phoneNumber || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className={inputBaseClasses}
-                      placeholder="e.g., +8801712345678"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                     <div>
-                      <label htmlFor="age" className={labelBaseClasses}>
-                        Age
+                      <label htmlFor="email" className={labelBaseClasses}>
+                        Email
                       </label>
                       <input
-                        type="number"
-                        name="age"
-                        id="age"
-                        value={formData.age || ""}
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={userData.email}
+                        disabled
+                        className={`${inputBaseClasses} bg-slate-100 dark:bg-slate-700/50 cursor-not-allowed`}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="phoneNumber" className={labelBaseClasses}>
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phoneNumber"
+                        id="phoneNumber"
+                        value={formData.phoneNumber || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        className={inputBaseClasses}
+                        placeholder="e.g., +8801712345678"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="age" className={labelBaseClasses}>
+                          Age
+                        </label>
+                        <input
+                          type="number"
+                          name="age"
+                          id="age"
+                          value={formData.age || ""}
+                          onChange={handleInputChange}
+                          className={inputBaseClasses}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="gender" className={labelBaseClasses}>
+                          Gender
+                        </label>
+                        <select
+                          name="gender"
+                          id="gender"
+                          value={formData.gender || ""}
+                          onChange={handleInputChange}
+                          className={inputBaseClasses}
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                          <option value="prefer_not_to_say">
+                            Prefer not to say
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="dateOfBirth" className={labelBaseClasses}>
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        name="dateOfBirth"
+                        id="dateOfBirth"
+                        value={formData.dateOfBirth || ""}
+                        onChange={handleInputChange}
                         className={inputBaseClasses}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="gender" className={labelBaseClasses}>
-                        Gender
-                      </label>
-                      <select
-                        name="gender"
-                        id="gender"
-                        value={formData.gender || ""}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className={inputBaseClasses}
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        <option value="prefer_not_to_say">
-                          Prefer not to say
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="dateOfBirth" className={labelBaseClasses}>
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      name="dateOfBirth"
-                      id="dateOfBirth"
-                      value={formData.dateOfBirth || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className={inputBaseClasses}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="bio" className={labelBaseClasses}>
-                      Bio / About Me
-                    </label>
-                    <textarea
-                      name="bio"
-                      id="bio"
-                      rows="3"
-                      value={formData.bio || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className={inputBaseClasses}
-                      placeholder="Tell us a little about yourself..."
-                    ></textarea>
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="pt-4 flex flex-col sm:flex-row gap-3">
-                    {isEditing ? (
-                      <>
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full sm:w-auto flex items-center justify-center px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                          {isLoading ? (
-                            <Spinner size="w-5 h-5" color="border-white" />
-                          ) : (
-                            <SaveIcon className="w-5 h-5 mr-2" />
-                          )}
-                          Save Changes
-                        </button>
-                        <button
-                          type="button" // Important: type="button" prevents form submission
-                          onClick={handleCancel}
-                          disabled={isLoading}
-                          className="w-full sm:w-auto px-6 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-semibold text-brandTextPrimary dark:text-slate-100 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
+                    <div>
+                      <label htmlFor="bio" className={labelBaseClasses}>
+                        Bio / About Me
+                      </label>
+                      <textarea
+                        name="bio"
+                        id="bio"
+                        rows="3"
+                        value={formData.bio || ""}
+                        onChange={handleInputChange}
+                        className={inputBaseClasses}
+                        placeholder="Tell us a little about yourself..."
+                      ></textarea>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                      {/* Save Changes (submit) */}
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full sm:w-auto flex items-center justify-center px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? (
+                          <Spinner size="w-5 h-5" color="border-white" />
+                        ) : (
+                          <SaveIcon className="w-5 h-5 mr-2" />
+                        )}
+                        Save Changes
+                      </button>
+
+                      {/* Cancel (does not submit) */}
                       <button
                         type="button"
-                        onClick={() => setIsEditing(true)}
-                        className="w-full sm:w-auto flex items-center justify-center px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-brandTextOnAccent bg-brandAccent hover:bg-brandAccentHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors"
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                        className="w-full sm:w-auto px-6 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-semibold text-brandTextPrimary dark:text-slate-100 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandAccentFocus dark:focus:ring-offset-slate-800 transition-colors"
                       >
-                        <PencilIcon className="w-5 h-5 mr-2" />
-                        Edit Profile
+                        Cancel
                       </button>
-                    )}
-                  </div>
-                </form>
+                    </div>
+                  </form>
+                )}
               </>
             )}
           </div>

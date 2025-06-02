@@ -1,7 +1,7 @@
 // components/Navbar.js
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -33,6 +33,9 @@ export default function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); // New state for cart sidebar
   const dispatch = useCartDispatch();
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
+
   const router = useRouter();
   const { items: cartItems } = useCartState();
   const { currentUser, loading, logout } = useAuth();
@@ -49,7 +52,20 @@ export default function Navbar() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [handleScroll]);
+  // Add this effect to handle clicking outside of dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
+        setIsProfileDropdownOpen(false);
+      }
+    }
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
     setIsSidebarOpen(false);
@@ -87,9 +103,9 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "Admission", href: "/admission" },
     { name: "Gallery", href: "/gallery" },
-    { name: "Sports", href: "/sports" },
+    { name: "Services", href: "/services" },
     { name: "Products", href: "/products" },
-    { name: "News", href: "/blog" },
+    { name: "Blogs", href: "/blog" },
     { name: "Courses", href: "/courses" },
     { name: "About", href: "/about" },
   ];
@@ -180,24 +196,67 @@ export default function Navbar() {
               {loading ? (
                 <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
               ) : currentUser ? (
-                <button
-                  onClick={openProfileModal}
-                  className="focus:outline-none rounded-full focus:ring-2 focus:ring-offset-2 focus:ring-brandAccent dark:focus:ring-offset-slate-900"
-                  aria-label="Open Profile"
-                >
-                  <Image
-                    src={
-                      currentUser.photoURL ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        currentUser.displayName || currentUser.email || "U"
-                      )}&background=random&color=fff&size=128`
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    onClick={() =>
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen)
                     }
-                    alt={currentUser.displayName || currentUser.email || "User"}
-                    width={36}
-                    height={36}
-                    className="w-9 h-9 rounded-full border-2 border-transparent hover:border-brandAccent dark:hover:border-brandAccentFocus transition-colors"
-                  />
-                </button>
+                    className="focus:outline-none rounded-full focus:ring-2 focus:ring-offset-2 focus:ring-brandAccent dark:focus:ring-offset-slate-900"
+                    aria-label="Open Profile Menu"
+                  >
+                    <Image
+                      src={
+                        currentUser.photoURL ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          currentUser.displayName || currentUser.email || "U"
+                        )}&background=random&color=fff&size=128`
+                      }
+                      alt={
+                        currentUser.displayName || currentUser.email || "User"
+                      }
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-full border-2 border-transparent hover:border-brandAccent dark:hover:border-brandAccentFocus transition-colors"
+                    />
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 z-50">
+                      <button
+                        onClick={() => {
+                          openProfileModal();
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                      >
+                        <UserCircleIcon className="h-5 w-5 mr-3" />
+                        Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          router.push("/student");
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                      >
+                        <AcademicCapIcon className="h-5 w-5 mr-3" />
+                        Student Dashboard
+                      </button>
+                      <hr className="border-gray-200 dark:border-slate-600 my-1" />
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-slate-700"
+                      >
+                        <LogoutIcon className="h-5 w-5 mr-3" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   <button
@@ -215,7 +274,6 @@ export default function Navbar() {
                 </>
               )}
             </div>
-
             {/* Mobile Menu Icon */}
             <div className="lg:hidden">
               <button
