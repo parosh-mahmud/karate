@@ -1,173 +1,292 @@
+// pages/student/index.js
+"use client";
+
+import Head from "next/head";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { School, CheckCircle, Cancel } from "@mui/icons-material";
-import { db, collection, query, where, getDocs } from "../../utils/firebase"; // Import Firebase functions
+import {
+  BookOutlined,
+  HourglassEmptyOutlined,
+  PersonOutlined,
+  EventOutlined,
+} from "@mui/icons-material";
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function StudentDashboard() {
-  const [admissions, setAdmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+  const [user, setUser] = useState(null);
+  const [admission, setAdmission] = useState(null);
+  const [loadingAdmission, setLoadingAdmission] = useState(true);
 
+  // Listen for auth changes
   useEffect(() => {
-    if (!authLoading) {
-      // Only fetch data if authentication is not loading
-      if (user) {
-        console.log("User authenticated:", user);
-        const fetchData = async () => {
-          setLoading(true);
-          try {
-            const admissionsRef = collection(db, "admissions");
-            const q = query(admissionsRef, where("uid", "==", user.uid));
-            const querySnapshot = await getDocs(q);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+    });
+    return () => unsubscribe();
+  }, []);
 
-            const userAdmissions = querySnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-
-            setAdmissions(userAdmissions);
-          } catch (error) {
-            console.error("Error loading admissions:", error);
-          } finally {
-            setLoading(false);
-          }
-        };
-
-        fetchData();
-      } else {
-        setLoading(false);
-        setAdmissions([]); // Clear admissions if no user
-      }
+  // Fetch this user's admission record
+  useEffect(() => {
+    if (!user) {
+      setAdmission(null);
+      setLoadingAdmission(false);
+      return;
     }
-  }, [user, authLoading]);
+    const loadAdmission = async () => {
+      setLoadingAdmission(true);
+      try {
+        const admissionsRef = collection(db, "admissions");
+        const q = query(admissionsRef, where("uid", "==", user.uid));
+        const snap = await getDocs(q);
 
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-lg font-semibold">Loading authentication...</p>
-      </div>
-    );
-  }
+        if (!snap.empty) {
+          // Map and attach a unified timestamp
+          const docs = snap.docs
+            .map((d) => {
+              const data = d.data();
+              const ts = data.timestamp ?? data.createdAt;
+              return { id: d.id, ...data, _ts: ts };
+            })
+            // Sort descending by seconds
+            .sort((a, b) => (b._ts?.seconds || 0) - (a._ts?.seconds || 0));
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-lg font-semibold">Loading admissions...</p>
-      </div>
-    );
-  }
+          setAdmission(docs[0]);
+        }
+      } catch (e) {
+        console.error("Error loading admission:", e);
+      } finally {
+        setLoadingAdmission(false);
+      }
+    };
+    loadAdmission();
+  }, [user]);
+
+  // Static placeholders for now
+  const enrolledCourses = 3; // TODO: fetch real count
+  const profileCompletion = 85; // TODO: compute real %
+  const upcomingSessions = [
+    // TODO: fetch real sessions
+    {
+      id: "1",
+      course: "Self Defence Basics",
+      date: "2025-06-15",
+      time: "10:00 AM",
+    },
+    { id: "2", course: "Advanced Combat", date: "2025-06-20", time: "2:00 PM" },
+  ];
+
+  // Determine display name
+  const displayName =
+    admission?.fullName ||
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "Student";
+
+  // Title-case status
+  const applicationStatus = loadingAdmission
+    ? "Loading…"
+    : admission?.status
+    ? admission.status.charAt(0).toUpperCase() + admission.status.slice(1)
+    : "Not Applied";
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 mt-6">
-      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-8">
-        {user ? (
-          <>
-            <Header user={user} />
-            <AdmissionDetails admissions={admissions} />
-          </>
-        ) : (
-          <div className="text-center">
-            <p className="text-lg font-semibold">
-              Please log in to view your dashboard.
-            </p>
-            {/* Add a login button/link here if needed */}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+    <>
+      <Head>
+        <title>Dashboard | JK Combat Academy</title>
+      </Head>
 
-function Header({ user }) {
-  return (
-    <div className="flex items-center space-x-4">
-      <School className="text-indigo-600 text-3xl" />
-      <h2 className="text-2xl font-semibold text-gray-800">
-        Welcome to Your Dashboard, {user?.displayName || "Student"}
-      </h2>
-      <p className="text-gray-600 mt-2">
-        Here you can view your admission details and track the status of your
-        application.
-      </p>
-    </div>
-  );
-}
+      <main className="min-h-screen bg-brandBackground dark:bg-slate-900 p-8 font-sans">
+        {/* Greeting */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <h1 className="text-3xl font-header text-brandTextPrimary">
+            Welcome back, {displayName}!
+          </h1>
+          <p className="mt-1 text-brandTextSecondary font-body">
+            Here’s what’s going on with your account.
+          </p>
+        </div>
 
-function AdmissionDetails({ admissions }) {
-  return (
-    <div className="mt-8">
-      <h3 className="text-xl font-semibold text-gray-700">Admission Details</h3>
-      {admissions.length > 0 ? (
-        admissions.map((admission) => (
-          <StudentAdmissionCard key={admission.id} admission={admission} />
-        ))
-      ) : (
-        <p className="mt-4 text-gray-600">No admissions found for this user.</p>
-      )}
-    </div>
-  );
-}
-
-function StudentAdmissionCard({ admission }) {
-  return (
-    <div className="bg-white rounded-lg shadow-md p-6 mt-4 border border-gray-200 relative">
-      <img
-        src={admission.picture}
-        alt="Student Picture"
-        className="w-32 h-20 object-cover border border-gray-300 absolute top-4 right-4 rounded-md"
-      />
-      <div className="flex items-center space-x-4">
-        <div className="flex-1">
-          <h4 className="text-lg font-medium text-gray-800">
-            Student ID: {admission.studentId}
-          </h4>
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              admission.status === "approved"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {admission.status === "approved" ? (
-              <>
-                <CheckCircle className="mr-1 text-green-500" fontSize="small" />
-                Approved
-              </>
+        {/* My Admission Card */}
+        <div className="max-w-7xl mx-auto mb-12">
+          <div className="bg-white dark:bg-slate-800 shadow rounded-lg p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {loadingAdmission ? (
+              <p className="text-center col-span-3">Loading admission…</p>
+            ) : !admission ? (
+              <p className="text-center col-span-3">You haven’t applied yet.</p>
             ) : (
               <>
-                <Cancel className="mr-1 text-red-500" fontSize="small" />
-                Pending
+                {/* Picture */}
+                {admission.picture && (
+                  <img
+                    src={admission.picture}
+                    alt="Your Portrait"
+                    className="w-32 h-32 object-cover rounded-full border border-slate-300 dark:border-slate-700 mx-auto"
+                  />
+                )}
+
+                {/* Key Details */}
+                <div className="space-y-2 font-body text-sm text-brandTextSecondary dark:text-slate-300">
+                  <p>
+                    <span className="font-semibold text-brandTextPrimary">
+                      Student ID:
+                    </span>{" "}
+                    {admission.studentId || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-brandTextPrimary">
+                      Status:
+                    </span>{" "}
+                    {applicationStatus}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-brandTextPrimary">
+                      DOB:
+                    </span>{" "}
+                    {admission.dateOfBirth}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-brandTextPrimary">
+                      Gender:
+                    </span>{" "}
+                    {admission.gender}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-brandTextPrimary">
+                      Mobile:
+                    </span>{" "}
+                    {admission.mobile}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-brandTextPrimary">
+                      Email:
+                    </span>{" "}
+                    {admission.email}
+                  </p>
+                </div>
+
+                {/* View Full Details */}
+                <div className="text-center md:text-right">
+                  <Link
+                    href="/student/admission-details"
+                    className="inline-block bg-brandAccent hover:bg-brandAccentHover text-brandTextOnAccent px-4 py-2 rounded-md font-body transition"
+                  >
+                    View Full Details
+                  </Link>
+                </div>
               </>
             )}
-          </span>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InfoField label="Full Name" value={admission.fullName} />
-        <InfoField label="Father's Name" value={admission.fatherName} />
-        <InfoField label="Mother's Name" value={admission.motherName} />
-        <InfoField label="Date of Birth" value={admission.dateOfBirth} />
-        <InfoField label="Mobile" value={admission.mobile} />
-        <InfoField label="Email" value={admission.email} />
-        <InfoField label="Address" value={admission.presentAddress} />
-        <InfoField label="Nationality" value={admission.nationality} />
-      </div>
+        {/* Overview Cards */}
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="bg-white dark:bg-slate-800 shadow rounded-lg p-5 flex items-center">
+            <BookOutlined className="h-8 w-8 text-brandAccent mr-4" />
+            <div>
+              <p className="text-2xl font-semibold text-brandTextPrimary">
+                {enrolledCourses}
+              </p>
+              <p className="text-sm text-brandTextSecondary font-body">
+                Courses Enrolled
+              </p>
+            </div>
+          </div>
 
-      <div className="mt-6 border-t border-gray-200 pt-4">
-        <h5 className="text-lg font-semibold text-gray-700">Payment Details</h5>
-        <InfoField label="Payment Method" value={admission.paymentMethod} />
-        <InfoField label="Transaction ID" value={admission.transactionId} />
-      </div>
-    </div>
-  );
-}
+          <div className="bg-white dark:bg-slate-800 shadow rounded-lg p-5 flex items-center">
+            <HourglassEmptyOutlined className="h-8 w-8 text-brandAccent mr-4" />
+            <div>
+              <p className="text-2xl font-semibold text-brandTextPrimary">
+                {applicationStatus}
+              </p>
+              <p className="text-sm text-brandTextSecondary font-body">
+                Application Status
+              </p>
+            </div>
+          </div>
 
-function InfoField({ label, value }) {
-  return (
-    <div>
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="text-md text-gray-800">{value || "N/A"}</p>
-    </div>
+          <div className="bg-white dark:bg-slate-800 shadow rounded-lg p-5 flex items-center">
+            <PersonOutlined className="h-8 w-8 text-brandAccent mr-4" />
+            <div>
+              <p className="text-2xl font-semibold text-brandTextPrimary">
+                {profileCompletion}%
+              </p>
+              <p className="text-sm text-brandTextSecondary font-body">
+                Profile Complete
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 shadow rounded-lg p-5 flex items-center">
+            <EventOutlined className="h-8 w-8 text-brandAccent mr-4" />
+            <div>
+              <p className="text-2xl font-semibold text-brandTextPrimary">
+                {upcomingSessions.length}
+              </p>
+              <p className="text-sm text-brandTextSecondary font-body">
+                Upcoming Sessions
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Sessions Table */}
+        <div className="max-w-7xl mx-auto bg-white dark:bg-slate-800 shadow rounded-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h2 className="text-xl font-header text-brandTextPrimary">
+              Upcoming Sessions
+            </h2>
+          </div>
+          {upcomingSessions.length > 0 ? (
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+              <thead className="bg-gray-50 dark:bg-slate-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Course
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Time
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
+                {upcomingSessions.map((s) => (
+                  <tr key={s.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-brandTextPrimary font-body">
+                      {s.course}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-brandTextSecondary font-body">
+                      {s.date}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-brandTextSecondary font-body">
+                      {s.time}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <Link
+                        href={`/student/sessions/${s.id}`}
+                        className="text-brandAccent hover:underline text-sm font-body"
+                      >
+                        View Details
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="p-6 text-center text-brandTextSecondary font-body">
+              You have no upcoming sessions.
+            </p>
+          )}
+        </div>
+      </main>
+    </>
   );
 }

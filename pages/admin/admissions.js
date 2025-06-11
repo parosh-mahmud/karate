@@ -3,60 +3,56 @@ import React, { useState, useEffect, useRef } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import { db } from "../../utils/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { VisibilityOutlined } from "@mui/icons-material";
 
 export default function AdmissionsPage() {
   const [admissions, setAdmissions] = useState([]);
-  const [isLoadingAdmissions, setIsLoadingAdmissions] = useState(true);
-  const [errorAdmissions, setErrorAdmissions] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedAdmission, setSelectedAdmission] = useState(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
     isMounted.current = true;
-    setErrorAdmissions(null);
-
     const fetchAdmissions = async () => {
-      if (isMounted.current) setIsLoadingAdmissions(true);
+      setError(null);
+      setIsLoading(true);
       try {
-        const admissionsCol = collection(db, "admissions");
-        const admissionsSnapshot = await getDocs(admissionsCol);
-        const admissionsList = admissionsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        if (isMounted.current) setAdmissions(admissionsList);
-      } catch (error) {
-        console.error("Error fetching admissions:", error);
-        if (isMounted.current)
-          setErrorAdmissions("Failed to load admissions data.");
+        const col = collection(db, "admissions");
+        const snap = await getDocs(col);
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        if (isMounted.current) setAdmissions(list);
+      } catch (e) {
+        console.error(e);
+        if (isMounted.current) setError("Failed to load admissions.");
       } finally {
-        if (isMounted.current) setIsLoadingAdmissions(false);
+        if (isMounted.current) setIsLoading(false);
       }
     };
     fetchAdmissions();
-
     return () => {
       isMounted.current = false;
     };
   }, []);
 
-  const handleUpdateStatus = async (admissionId, newStatus) => {
-    setErrorAdmissions(null);
+  const handleUpdateStatus = async (id, status) => {
+    setError(null);
     try {
-      const admissionDocRef = doc(db, "admissions", admissionId);
-      await updateDoc(admissionDocRef, { status: newStatus });
+      const refDoc = doc(db, "admissions", id);
+      await updateDoc(refDoc, { status });
       if (isMounted.current) {
         setAdmissions((prev) =>
-          prev.map((ad) =>
-            ad.id === admissionId ? { ...ad, status: newStatus } : ad
-          )
+          prev.map((a) => (a.id === id ? { ...a, status } : a))
         );
       }
-    } catch (error) {
-      console.error("Error updating admission status:", error);
-      if (isMounted.current)
-        setErrorAdmissions(`Failed to update status for ${admissionId}.`);
+    } catch (e) {
+      console.error(e);
+      if (isMounted.current) setError(`Could not update ${id}.`);
     }
   };
+
+  const openDetails = (admission) => setSelectedAdmission(admission);
+  const closeDetails = () => setSelectedAdmission(null);
 
   return (
     <AdminLayout>
@@ -65,74 +61,80 @@ export default function AdmissionsPage() {
           Admissions Management
         </h1>
 
-        {errorAdmissions && (
-          <p className="text-red-600 mb-3 text-sm">{errorAdmissions}</p>
-        )}
+        {error && <p className="text-red-600 mb-3 text-sm">{error}</p>}
 
-        {isLoadingAdmissions ? (
+        {isLoading ? (
           <p className="text-gray-500">Loading admissions...</p>
         ) : admissions.length > 0 ? (
           <>
-            {/* Reuse the Table and Cards JSX from your previous index.js here */}
-            {/* Table for larger screens */}
+            {/* Table for md+ */}
             <div className="hidden md:block overflow-x-auto">
-              {/* ... (Paste your Admissions Table JSX here) ... */}
               <table className="min-w-full bg-white border">
-                {/* Table Head */}
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="py-2 px-4 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="py-2 px-4 border text-left text-xs font-medium text-gray-500 uppercase">
                       Student ID
                     </th>
-                    {/* ... other headers ... */}
-                    <th className="py-2 px-4 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="py-2 px-4 border text-left text-xs font-medium text-gray-500 uppercase">
+                      Name
+                    </th>
+                    <th className="py-2 px-4 border text-left text-xs font-medium text-gray-500 uppercase">
+                      Email
+                    </th>
+                    <th className="py-2 px-4 border text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className="py-2 px-4 border text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="py-2 px-4 border text-center text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                {/* Table Body */}
                 <tbody className="divide-y divide-gray-200">
-                  {admissions.map((admission) => (
-                    <tr key={admission.id} className="text-sm text-gray-700">
+                  {admissions.map((a) => (
+                    <tr key={a.id} className="text-sm text-gray-700">
                       <td className="py-2 px-4 border whitespace-nowrap">
-                        {admission.studentId || "N/A"}
+                        {a.studentId || "N/A"}
                       </td>
-                      {/* ... other cells ... */}
+                      <td className="py-2 px-4 border whitespace-nowrap">
+                        {a.fullName}
+                      </td>
+                      <td className="py-2 px-4 border whitespace-nowrap">
+                        {a.email}
+                      </td>
                       <td className="py-2 px-4 border whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            admission.status === "approved"
+                            a.status === "approved"
                               ? "bg-green-100 text-green-800"
-                              : admission.status === "declined"
+                              : a.status === "declined"
                               ? "bg-red-100 text-red-800"
                               : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
-                          {admission.status}
+                          {a.status}
                         </span>
                       </td>
                       <td className="py-2 px-4 border text-center">
-                        <div className="flex justify-center flex-wrap gap-2">
+                        <div className="flex justify-center gap-2 flex-wrap">
                           <button
-                            onClick={() =>
-                              handleUpdateStatus(admission.id, "approved")
-                            }
-                            disabled={admission.status === "approved"}
-                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs rounded-md transition duration-150 ease-in-out disabled:opacity-50"
+                            onClick={() => handleUpdateStatus(a.id, "approved")}
+                            disabled={a.status === "approved"}
+                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs rounded-md disabled:opacity-50"
                           >
                             Accept
                           </button>
                           <button
-                            onClick={() =>
-                              handleUpdateStatus(admission.id, "declined")
-                            }
-                            disabled={admission.status === "declined"}
-                            className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs rounded-md transition duration-150 ease-in-out disabled:opacity-50"
+                            onClick={() => handleUpdateStatus(a.id, "declined")}
+                            disabled={a.status === "declined"}
+                            className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs rounded-md disabled:opacity-50"
                           >
                             Decline
+                          </button>
+                          <button
+                            onClick={() => openDetails(a)}
+                            className="bg-brandAccent hover:bg-brandAccentHover text-brandTextOnAccent px-2 py-1 text-xs rounded-md"
+                          >
+                            <VisibilityOutlined fontSize="inherit" /> View
                           </button>
                         </div>
                       </td>
@@ -141,53 +143,54 @@ export default function AdmissionsPage() {
                 </tbody>
               </table>
             </div>
+
             {/* Cards for small screens */}
             <div className="md:hidden space-y-4">
-              {/* ... (Paste your Admissions Cards JSX here) ... */}
-              {admissions.map((admission) => (
+              {admissions.map((a) => (
                 <div
-                  key={admission.id}
+                  key={a.id}
                   className="bg-white shadow-sm rounded-md p-4 border border-gray-200"
                 >
-                  {/* Card Content */}
                   <p className="text-sm mb-1">
-                    <span className="font-semibold">Name:</span>{" "}
-                    {admission.fullName}
+                    <span className="font-semibold">Name:</span> {a.fullName}
                   </p>
-                  {/* ... other details ... */}
+                  <p className="text-sm mb-1">
+                    <span className="font-semibold">Email:</span> {a.email}
+                  </p>
                   <p className="text-sm mb-2">
-                    <span className="font-semibold">Status:</span>
+                    <span className="font-semibold">Status:</span>{" "}
                     <span
                       className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        admission.status === "approved"
+                        a.status === "approved"
                           ? "bg-green-100 text-green-800"
-                          : admission.status === "declined"
+                          : a.status === "declined"
                           ? "bg-red-100 text-red-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {admission.status}
+                      {a.status}
                     </span>
                   </p>
-                  {/* Action Buttons */}
-                  <div className="flex mt-2 gap-2">
+                  <div className="flex gap-2">
                     <button
-                      onClick={() =>
-                        handleUpdateStatus(admission.id, "approved")
-                      }
-                      disabled={admission.status === "approved"}
-                      className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs rounded-md transition duration-150 ease-in-out disabled:opacity-50"
+                      onClick={() => handleUpdateStatus(a.id, "approved")}
+                      disabled={a.status === "approved"}
+                      className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs rounded-md disabled:opacity-50"
                     >
                       Accept
                     </button>
                     <button
-                      onClick={() =>
-                        handleUpdateStatus(admission.id, "declined")
-                      }
-                      disabled={admission.status === "declined"}
-                      className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs rounded-md transition duration-150 ease-in-out disabled:opacity-50"
+                      onClick={() => handleUpdateStatus(a.id, "declined")}
+                      disabled={a.status === "declined"}
+                      className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs rounded-md disabled:opacity-50"
                     >
                       Decline
+                    </button>
+                    <button
+                      onClick={() => openDetails(a)}
+                      className="bg-brandAccent hover:bg-brandAccentHover text-brandTextOnAccent px-2 py-1 text-xs rounded-md"
+                    >
+                      <VisibilityOutlined fontSize="inherit" /> View
                     </button>
                   </div>
                 </div>
@@ -195,9 +198,100 @@ export default function AdmissionsPage() {
             </div>
           </>
         ) : (
-          !isLoadingAdmissions && (
-            <p className="text-gray-500">No admissions found.</p>
-          )
+          <p className="text-gray-500">No admissions found.</p>
+        )}
+
+        {/* Details Modal */}
+        {selectedAdmission && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+              <button
+                onClick={closeDetails}
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+              <h2 className="text-xl font-semibold text-brandTextPrimary mb-4">
+                Admission Details
+              </h2>
+              <div className="space-y-2 text-sm text-gray-700 dark:text-slate-200 font-body">
+                <p>
+                  <span className="font-semibold">Full Name:</span>{" "}
+                  {selectedAdmission.fullName}
+                </p>
+                <p>
+                  <span className="font-semibold">Father’s Name:</span>{" "}
+                  {selectedAdmission.fatherName}
+                </p>
+                <p>
+                  <span className="font-semibold">Mother’s Name:</span>{" "}
+                  {selectedAdmission.motherName}
+                </p>
+                <p>
+                  <span className="font-semibold">Mobile:</span>{" "}
+                  {selectedAdmission.mobile}
+                </p>
+                <p>
+                  <span className="font-semibold">Email:</span>{" "}
+                  {selectedAdmission.email}
+                </p>
+                <p>
+                  <span className="font-semibold">DOB:</span>{" "}
+                  {selectedAdmission.dateOfBirth}
+                </p>
+                <p>
+                  <span className="font-semibold">Gender:</span>{" "}
+                  {selectedAdmission.gender}
+                </p>
+                <p>
+                  <span className="font-semibold">Profession:</span>{" "}
+                  {selectedAdmission.profession}
+                </p>
+                <p>
+                  <span className="font-semibold">Blood Group:</span>{" "}
+                  {selectedAdmission.bloodGroup}
+                </p>
+                <p>
+                  <span className="font-semibold">Nationality:</span>{" "}
+                  {selectedAdmission.nationality}
+                </p>
+                <p>
+                  <span className="font-semibold">NID:</span>{" "}
+                  {selectedAdmission.nid}
+                </p>
+                <p>
+                  <span className="font-semibold">Religion:</span>{" "}
+                  {selectedAdmission.religion}
+                </p>
+                <p>
+                  <span className="font-semibold">Payment Method:</span>{" "}
+                  {selectedAdmission.paymentMethod}
+                </p>
+                <p>
+                  <span className="font-semibold">Transaction ID:</span>{" "}
+                  {selectedAdmission.transactionId}
+                </p>
+                {selectedAdmission.picture && (
+                  <div className="mt-4">
+                    <span className="font-semibold">Picture:</span>
+                    <img
+                      src={selectedAdmission.picture}
+                      alt="Applicant"
+                      className="mt-2 w-32 h-32 object-cover rounded-md border border-gray-300 dark:border-slate-700"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closeDetails}
+                  className="px-4 py-2 bg-brandAccent hover:bg-brandAccentHover text-brandTextOnAccent rounded-md"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AdminLayout>
