@@ -144,20 +144,24 @@ export default function Navbar() {
       >
         <nav className="container mx-auto flex items-center justify-between px-4 h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 shrink-0">
-            <Image
-              src={logo}
-              alt="JK Combat Academy Logo"
-              width={40}
-              height={40}
-              className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
-              priority
-            />
+          <Link href="/" className="flex items-center space-x-2 shrink-0 px-1">
+            {" "}
+            {/* Added px-1 for padding */}
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12">
+              {" "}
+              {/* Wrapper div with padding */}
+              <Image
+                src={logo}
+                alt="JK Combat Academy Logo"
+                fill
+                className="rounded-full object-contain p-0.5" /* Added p-0.5 and object-contain */
+                priority
+              />
+            </div>
             <span className="text-lg sm:text-xl md:text-2xl font-bold uppercase text-brandAccent font-header">
               JK Combat Academy
             </span>
           </Link>
-
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-5 xl:space-x-7">
             {navigation.map((item) => (
@@ -174,7 +178,6 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-
           {/* Desktop Actions & Mobile Menu Trigger */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             <ThemeChanger />
