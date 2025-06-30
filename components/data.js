@@ -16,7 +16,7 @@ const benefitTwoImg =
 const benefitOne = {
   title: "Why Train with JK Combat Academy",
   desc: "At JK Combat Academy, we provide world-class combat training to help you become a skilled martial artist. Our programs are tailored to develop your strength, technique, and mental discipline, whether you’re a beginner or an experienced fighter.",
-  image: benefitOneImg, // Pass image URL as a string
+  image: benefitOneImg,
   bullets: [
     {
       title: "Expert Instructors",
@@ -38,8 +38,18 @@ const benefitOne = {
 
 const benefitTwo = {
   title: "More Reasons to Join JK Combat Academy",
-  desc: "We focus on providing a holistic combat training experience. From modern training facilities to flexible programs, JK Combat Academy offers everything you need to excel in martial arts.",
-  image: benefitTwoImg, // Pass image URL as a string
+  desc: `FITNESS
+
+"Being fit is not a goal you reach once — it is a way of life."
+
+Fitness is like a journey. It is not just about exercise — it is about many things working together. To be truly fit, you need to care for your body’s movement, strength, balance, and flexibility. But fitness is not only about the body — it also means taking care of your mind and emotions.
+
+At JK Combat Academy, we help you find the right balance. We create a fitness plan that suits you best — simple, smart, and effective.
+
+Remember, fitness is not just physical. It is mental, emotional, and even spiritual.
+
+Keep moving. Move every day, and move with purpose.`,
+  image: benefitTwoImg,
   bullets: [
     {
       title: "Comprehensive Curriculum",
