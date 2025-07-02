@@ -47,7 +47,8 @@ export default function Hero() {
       <div className="w-full lg:w-1/2 flex justify-center">
         <div className="relative w-full max-w-md">
           <Image
-            src="https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895"
+            // src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/hero.png?alt=media&token=d5c3510f-e6ba-4c72-84da-86d915b9f04a"
+            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/IMG_8698.png?alt=media&token=15d11040-af6a-4377-998b-cfa5aaae6c95"
             alt="Students training in martial arts at JK Combat Academy"
             width={800}
             height={600}

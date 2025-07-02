@@ -108,6 +108,7 @@ export default function Navbar() {
     { name: "Blogs", href: "/blog" },
     { name: "Courses", href: "/courses" },
     { name: "About", href: "/about" },
+    { name: "Result", href: "/result" },
   ];
 
   // Common Tailwind classes based on your branding
