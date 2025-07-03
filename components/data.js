@@ -9,9 +9,9 @@ import {
 
 // Cloudinary image URLs
 const benefitOneImg =
-  "https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895";
+  "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/DSC07253.jpg?alt=media&token=ef777603-e0e5-45db-ac83-b5d52525c60b";
 const benefitTwoImg =
-  "https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895";
+  "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/DSC07253.jpg?alt=media&token=ef777603-e0e5-45db-ac83-b5d52525c60b";
 
 const benefitOne = {
   title: "Why Train with JK Combat Academy",
