@@ -1,6 +1,6 @@
 // components/BlogSection.jsx
 import React, { useState, useEffect } from "react";
-import { db } from "../utils/firebase"; // Adjust this import path if needed
+import { db } from "../lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import Link from "next/link";
 
@@ -27,8 +27,7 @@ function timeAgo(timestamp) {
     { label: "second", seconds: 1 },
   ];
 
-  for (let i = 0; i < intervals.length; i++) {
-    const interval = intervals[i];
+  for (let interval of intervals) {
     const count = Math.floor(seconds / interval.seconds);
     if (count >= 1) {
       return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
@@ -51,16 +50,16 @@ const BlogSection = () => {
       try {
         const blogsRef = collection(db, "blogs");
         const q = query(blogsRef, orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-        const blogsData = querySnapshot.docs.map((doc) => {
+        const blogsData = snapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             id: doc.id,
             title: data.title || "Untitled",
             description: data.description || "",
             author: data.author || "Unknown",
-            image: data.image || "/default-blog.jpg", // fallback image
+            image: data.image || "/default-blog.jpg",
             createdAt: data.createdAt,
           };
         });
@@ -79,7 +78,7 @@ const BlogSection = () => {
 
   return (
     <section className="container mx-auto px-4 py-12">
-      <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 tracking-wide text-gray-800 dark:text-gray-100">
+      <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 text-gray-800 dark:text-gray-100">
         Recent Blogs
       </h2>
 
@@ -102,13 +101,11 @@ const BlogSection = () => {
           {blogs.map((blog) => (
             <article
               key={blog.id}
-              className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transform transition-transform hover:scale-105 ease-in-out duration-300 group"
+              className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transform transition-transform hover:scale-105 duration-300 group"
             >
-              {/* Highlighted border on hover */}
-              <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-red-500 transition-all duration-300 ease-in-out -z-10"></div>
+              <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-red-500 transition-all duration-300 -z-10" />
 
-              {/* Image (with fallback) */}
-              <div className="h-48 w-full bg-gray-200 dark:bg-gray-700">
+              <div className="h-48 bg-gray-200 dark:bg-gray-700">
                 <img
                   src={blog.image}
                   alt={blog.title}
@@ -116,11 +113,10 @@ const BlogSection = () => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = "/default-blog.jpg";
                   }}
-                  className="object-cover w-full h-full"
+                  className="w-full h-full object-cover"
                 />
               </div>
 
-              {/* Content */}
               <div className="p-4 flex flex-col h-full">
                 <h3 className="font-semibold text-lg text-pink-600 dark:text-pink-400 mb-2">
                   {blog.title}
@@ -134,7 +130,7 @@ const BlogSection = () => {
 
                 <Link
                   href={`/blog/${blog.id}`}
-                  className="text-sm text-blue-500 hover:underline self-end"
+                  className="self-end text-sm text-blue-500 hover:underline"
                 >
                   Read more…
                 </Link>

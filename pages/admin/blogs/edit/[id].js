@@ -1,16 +1,25 @@
 // pages/admin/blogs/edit/[id].js
 import { useState, useEffect } from "react";
-import { db } from "../../../../utils/firebase";
-import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css"; // Import styles for React Quill
+
+// Firebase imports
+import {
+  db,
+  storage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "@/lib/firebase";
+import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 export default function EditBlog() {
   const router = useRouter();
   const { id } = router.query;
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -21,46 +30,41 @@ export default function EditBlog() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch existing blog data
   useEffect(() => {
-    if (id) {
-      const fetchBlog = async () => {
-        try {
-          const blogRef = doc(db, "blogs", id);
-          const blogSnap = await getDoc(blogRef);
-
-          if (blogSnap.exists()) {
-            const data = blogSnap.data();
-            setFormData({
-              id: blogSnap.id,
-              title: data.title,
-              description: data.description,
-              content: data.content,
-              author: data.author,
-              image: data.image,
-              imageFile: null, // Initially, no new image file
-            });
-          } else {
-            console.log("No such document!");
-          }
-        } catch (error) {
-          console.error("Error fetching blog:", error);
+    if (!id) return;
+    (async () => {
+      try {
+        const blogRef = doc(db, "blogs", id);
+        const blogSnap = await getDoc(blogRef);
+        if (blogSnap.exists()) {
+          const data = blogSnap.data();
+          setFormData({
+            title: data.title || "",
+            description: data.description || "",
+            content: data.content || "",
+            author: data.author || "",
+            image: data.image || "",
+            imageFile: null,
+          });
         }
-      };
-
-      fetchBlog();
-    }
+      } catch (error) {
+        console.error("Error fetching blog:", error);
+      }
+    })();
   }, [id]);
 
   const handleChange = (e) => {
-    if (e.target.name === "image") {
-      setFormData({ ...formData, imageFile: e.target.files[0] });
+    const { name, value, files } = e.target;
+    if (name === "image" && files && files[0]) {
+      setFormData((prev) => ({ ...prev, imageFile: files[0] }));
     } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleContentChange = (value) => {
-    setFormData({ ...formData, content: value });
+    setFormData((prev) => ({ ...prev, content: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -68,40 +72,30 @@ export default function EditBlog() {
     setIsSubmitting(true);
 
     try {
-      let imageUrl = formData.image; // Keep existing image URL
+      let imageUrl = formData.image;
 
       if (formData.imageFile) {
-        // If a new image is selected, upload it to Cloudinary via API route
+        // Upload new image to Firebase Storage
+        const file = formData.imageFile;
+        const path = `blogImages/${id}/${file.name}`;
+        const imgRef = storageRef(storage, path);
+        const uploadTask = uploadBytesResumable(imgRef, file);
 
-        // Convert the image file to a base64 string
-        const reader = new FileReader();
-        const imageUploadPromise = new Promise((resolve, reject) => {
-          reader.onloadend = () => {
-            resolve(reader.result);
-          };
-          reader.onerror = reject;
-        });
-        reader.readAsDataURL(formData.imageFile);
-        const base64Image = await imageUploadPromise;
-
-        // Upload the image via API route
-        const response = await fetch("/api/uploadBlogImg", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ image: base64Image }),
+        // Wait for upload to complete
+        await new Promise((resolve, reject) => {
+          uploadTask.on(
+            "state_changed",
+            null,
+            (err) => reject(err),
+            () => resolve()
+          );
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-          imageUrl = data.url;
-        } else {
-          throw new Error(data.error || "Image upload failed");
-        }
+        // Get download URL
+        imageUrl = await getDownloadURL(imgRef);
       }
 
+      // Update Firestore document
       const blogRef = doc(db, "blogs", id);
       await updateDoc(blogRef, {
         title: formData.title,
@@ -121,7 +115,10 @@ export default function EditBlog() {
     }
   };
 
-  if (!formData.id) return <p>Loading...</p>;
+  // Loading state while fetching
+  if (!formData.title && !formData.description && !formData.content) {
+    return <p className="p-6">Loading...</p>;
+  }
 
   return (
     <div className="p-6">

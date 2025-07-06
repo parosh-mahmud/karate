@@ -1,7 +1,7 @@
 // pages/blog/index.js
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { db } from "@/utils/firebase";
+import { db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import Head from "next/head";
 

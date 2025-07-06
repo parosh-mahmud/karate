@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { storage, db } from "@/utils/firebase";
+import { storage, db } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";

@@ -1,8 +1,11 @@
 // pages/admin/index.js
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { db } from "../../lib/firebase"; // Make sure this path is correct
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
-// Example icons (replace with actual SVGs or an icon library like Heroicons)
+
+// --- EXISTING ICONS ---
 const ProductIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -84,22 +87,164 @@ const BlogIcon = () => (
   </svg>
 );
 
+// --- NEW ICONS for Registrations ---
+const RunningSeminarIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12.75 4.5l7.5 7.5-7.5 7.5"
+    />
+  </svg>
+);
+const FitnessSeminarIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 mr-2 text-brandAccent"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M10.5 4.5a7.5 7.5 0 100 15 7.5 7.5 0 000-15z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M10.5 10.5h.008v.008h-.008V10.5z"
+    />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 13.5v-3" />
+  </svg>
+);
+
+// --- Helper component to display recent registrations ---
+const RegistrationList = ({
+  title,
+  registrations,
+  loading,
+  error,
+  viewAllLink,
+}) => {
+  if (loading)
+    return (
+      <p className="text-brandTextSecondary dark:text-slate-400">
+        Loading registrations...
+      </p>
+    );
+  if (error)
+    return <p className="text-red-500">Error loading registrations: {error}</p>;
+  if (registrations.length === 0)
+    return (
+      <p className="text-brandTextSecondary dark:text-slate-400">
+        No recent registrations found.
+      </p>
+    );
+
+  return (
+    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-brandTextPrimary dark:text-brandBackground">
+          {title}
+        </h3>
+        <Link
+          href={viewAllLink}
+          className="text-brandAccent hover:text-brandAccentHover text-sm font-medium"
+        >
+          View All &rarr;
+        </Link>
+      </div>
+      <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+        {registrations.slice(0, 5).map((reg) => (
+          <li key={reg.id} className="py-3 flex justify-between items-center">
+            <div>
+              <p className="font-medium text-brandTextPrimary dark:text-slate-300">
+                {reg.name}
+              </p>
+              <p className="text-sm text-brandTextSecondary dark:text-slate-400">
+                {reg.phone}
+              </p>
+            </div>
+            <p className="text-sm text-brandTextSecondary dark:text-slate-500">
+              {reg.createdAt?.toDate().toLocaleDateString()}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export default function AdminHomePage() {
+  const [runningRegistrations, setRunningRegistrations] = useState([]);
+  const [fitnessRegistrations, setFitnessRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      try {
+        // Fetch Running Seminar Registrations
+        const runningQuery = query(
+          collection(db, "running_registrations"),
+          orderBy("createdAt", "desc")
+        );
+        const runningSnapshot = await getDocs(runningQuery);
+        setRunningRegistrations(
+          runningSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+
+        // Fetch Fitness Seminar Registrations
+        const fitnessQuery = query(
+          collection(db, "fitness_registrations"),
+          orderBy("createdAt", "desc")
+        );
+        const fitnessSnapshot = await getDocs(fitnessQuery);
+        setFitnessRegistrations(
+          fitnessSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+      } catch (err) {
+        console.error("Error fetching registrations:", err);
+        setError("Could not load registration data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRegistrations();
+  }, []);
+
   const cardBaseStyle =
-    "bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-brandAccent/30 transition-shadow duration-300";
+    "bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-brandAccent/30 transition-shadow duration-300 flex flex-col";
   const cardTitleStyle =
     "text-xl font-semibold text-brandTextPrimary dark:text-brandBackground mb-2 flex items-center font-header";
   const cardDescriptionStyle =
-    "text-brandTextSecondary dark:text-slate-400 mb-4 font-sans";
+    "text-brandTextSecondary dark:text-slate-400 mb-4 font-sans flex-grow";
   const cardLinkStyle =
-    "text-brandAccent hover:text-brandAccentHover font-medium transition-colors duration-300 font-sans";
+    "text-brandAccent hover:text-brandAccentHover font-medium transition-colors duration-300 font-sans mt-auto";
 
   return (
     <div className="font-sans">
       <h1 className="text-3xl font-bold text-brandTextPrimary dark:text-brandBackground mb-8 font-header">
         Admin Dashboard
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {/* --- Main Dashboard Cards --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Manage Products Card */}
         <div className={cardBaseStyle}>
           <h2 className={cardTitleStyle}>
@@ -139,6 +284,38 @@ export default function AdminHomePage() {
           </Link>
         </div>
 
+        {/* Running Seminar Registrations Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <RunningSeminarIcon /> Running Seminar
+          </h2>
+          <p className={cardDescriptionStyle}>
+            {loading
+              ? "Loading..."
+              : `${runningRegistrations.length} total registrations.`}
+          </p>
+          {/* CREATE THIS PAGE: /admin/registrations/running */}
+          <Link href="/admin/registrations/running" className={cardLinkStyle}>
+            Manage Registrations &rarr;
+          </Link>
+        </div>
+
+        {/* Fitness Seminar Registrations Card */}
+        <div className={cardBaseStyle}>
+          <h2 className={cardTitleStyle}>
+            <FitnessSeminarIcon /> Fitness Seminar
+          </h2>
+          <p className={cardDescriptionStyle}>
+            {loading
+              ? "Loading..."
+              : `${fitnessRegistrations.length} total registrations.`}
+          </p>
+          {/* CREATE THIS PAGE: /admin/registrations/fitness */}
+          <Link href="/admin/registrations/fitness" className={cardLinkStyle}>
+            Manage Registrations &rarr;
+          </Link>
+        </div>
+
         {/* Gallery Card */}
         <div className={cardBaseStyle}>
           <h2 className={cardTitleStyle}>
@@ -162,8 +339,29 @@ export default function AdminHomePage() {
             Write New Blog Post &rarr;
           </Link>
         </div>
+      </div>
 
-        {/* You can add more cards here for other sections */}
+      {/* --- Recent Registrations Section --- */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold text-brandTextPrimary dark:text-brandBackground mb-6 font-header">
+          Recent Registrations
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RegistrationList
+            title="Running Seminar"
+            registrations={runningRegistrations}
+            loading={loading}
+            error={error}
+            viewAllLink="/admin/registrations/running"
+          />
+          <RegistrationList
+            title="Fitness Seminar"
+            registrations={fitnessRegistrations}
+            loading={loading}
+            error={error}
+            viewAllLink="/admin/registrations/fitness"
+          />
+        </div>
       </div>
     </div>
   );

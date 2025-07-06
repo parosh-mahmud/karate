@@ -3,24 +3,22 @@ import Container from "./container";
 
 export default function Video() {
   const [playVideo, setPlayVideo] = useState(false);
-  // IMPORTANT: Replace this with your actual YouTube video ID or embed URL
-  const videoEmbedUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"; // Example: Rick Astley
+
+  // ✅ Use your actual video embed URL here
+  const videoEmbedUrl = "https://www.youtube.com/embed/MSLbdB8Xvmg";
 
   return (
     <Container>
       <div className="w-full max-w-4xl mx-auto mb-20 overflow-hidden rounded-2xl shadow-xl">
         <div
-          onClick={() => setPlayVideo(true)} // Play video on click, don't toggle to stop via placeholder click
+          onClick={() => setPlayVideo(true)}
           className="relative cursor-pointer aspect-w-16 aspect-h-9 
-                     bg-gradient-to-br from-brandAccent via-brandAccentFocus to-sky-400 /* Using brand colors for gradient */
-                     rounded-lg overflow-hidden group" // Added rounded-lg to inner div for consistency
+                     bg-gradient-to-br from-brandAccent via-brandAccentFocus to-sky-400 
+                     rounded-lg overflow-hidden group"
         >
           {!playVideo && (
             <>
-              {/* Optional: You can add a thumbnail image here if you have one */}
-              {/* <Image src="/path-to-your-video-thumbnail.jpg" layout="fill" objectFit="cover" alt="Video Thumbnail" /> */}
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300"></div>{" "}
-              {/* Subtle overlay */}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300"></div>
               <button
                 aria-label="Play Video"
                 className="absolute inset-auto text-brandTextOnAccent 
@@ -33,7 +31,7 @@ export default function Video() {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-10 h-10 md:w-12 md:h-12" // Icon size relative to button
+                  className="w-10 h-10 md:w-12 md:h-12"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -49,13 +47,13 @@ export default function Video() {
           )}
           {playVideo && (
             <iframe
-              className="absolute top-0 left-0 w-full h-full" // Ensure iframe fills the container
-              src={videoEmbedUrl + "?autoplay=1"} // Added autoplay parameter
-              title="Promotional Video" // Update with a relevant title
-              frameBorder="0" // Use frameBorder (camelCase for React)
+              className="absolute top-0 left-0 w-full h-full"
+              src={`${videoEmbedUrl}?autoplay=1`}
+              title="Round Kick ঘুরিয়ে লাথি দেওয়ার বেসিক কৌশল"
+              frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen // Use allowFullScreen (camelCase for React)
+              allowFullScreen
             ></iframe>
           )}
         </div>

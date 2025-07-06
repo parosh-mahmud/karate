@@ -37,8 +37,8 @@ const benefitOne = {
 };
 
 const benefitTwo = {
-  title: "More Reasons to Join JK Combat Academy",
-  desc: `FITNESS
+  title: "FITNESS",
+  desc: `
 
 "Being fit is not a goal you reach once — it is a way of life."
 

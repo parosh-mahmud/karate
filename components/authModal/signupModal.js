@@ -144,7 +144,7 @@ export default function SignupModal({ open = false, onClose = () => {} }) {
           <div className="hidden md:flex md:w-1/2 relative items-center justify-center bg-gradient-to-br from-brandAccent/80 to-brandAccentHover/90 dark:from-brandAccent/70 dark:to-brandAccentHover/80 p-8 lg:p-12">
             <div className="text-center text-white">
               <Image
-                src="https://firebasestorage.googleapis.com/v0/b/nirapod-lenden.firebasestorage.app/o/galleryImages%2Fd2e102e8-0844-4960-9a4f-613d3761b384-iphoneimage.jpg?alt=media&token=ee28b2be-b1d2-4ab3-bedf-f6210d1ee895"
+                src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/IMG_8076.JPG?alt=media&token=feb2ea1e-b5ec-4df4-9e7c-facc358312e5"
                 alt="Signup illustration"
                 width={300}
                 height={300}

@@ -103,7 +103,9 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "Admission", href: "/admission" },
     { name: "Gallery", href: "/gallery" },
-    { name: "Services", href: "/services" },
+    // { name: "Services", href: "/services" },
+    { name: "Seminars", href: "/seminars" },
+
     { name: "Products", href: "/products" },
     { name: "Blogs", href: "/blog" },
     { name: "Courses", href: "/courses" },

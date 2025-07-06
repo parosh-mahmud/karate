@@ -1,7 +1,7 @@
 //pages/blog/[id].js
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { db } from "../../utils/firebase";
+import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import Head from "next/head";
 import DOMPurify from "dompurify";
