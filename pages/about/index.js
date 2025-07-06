@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import { db } from "@/utils/firebase"; // Import your Firebase configuration
+import { db } from "@/lib/firebase"; // Import your Firebase configuration
 import { collection, getDocs } from "firebase/firestore";
 
 export default function AboutPage() {
@@ -54,7 +54,7 @@ export default function AboutPage() {
             <div className="flex flex-col items-center">
               <div className="w-40 h-40 sm:w-48 sm:h-48 relative mb-6 border-4 border-brandAccent dark:border-brandAccentFocus rounded-full shadow-lg">
                 <Image
-                  src="/images/ceo.jpg" // Ensure this path is correct
+                  src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/galleryImages%2F90ab4214-92f7-4699-96c8-65d9fccf2269-IMG_1573.JPG?alt=media&token=da0613a2-0d8d-4efe-9dc0-d859315100b4" // Ensure this path is correct
                   alt="Arman Hossain, CEO of JK Combat Academy"
                   layout="fill"
                   objectFit="cover"
