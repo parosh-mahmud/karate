@@ -116,13 +116,13 @@ const RunningSeminarForm = () => {
                   </p>
                   <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-gray-700">
                     <li>
-                      <strong>bKash:</strong> 01XXXXXXXXX (Personal)
+                      <strong>bKash:</strong> 01985540923 (Personal)
                     </li>
                     <li>
-                      <strong>Nagad:</strong> 01XXXXXXXXX (Personal)
+                      <strong>Nagad:</strong> 01985540923 (Personal)
                     </li>
                     <li>
-                      <strong>Rocket:</strong> 01XXXXXXXXX (Personal)
+                      <strong>Rocket:</strong> 01985540923 (Personal)
                     </li>
                   </ul>
                 </div>

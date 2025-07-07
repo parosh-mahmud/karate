@@ -8,6 +8,7 @@ export default function FitnessSeminarForm() {
     name: "",
     department: "",
     phone: "",
+    email: "",
     question: "",
     complement: "",
     paymentMethod: "",
@@ -43,6 +44,7 @@ export default function FitnessSeminarForm() {
         name: "",
         department: "",
         phone: "",
+        email: "",
         question: "",
         complement: "",
         paymentMethod: "",
@@ -109,13 +111,13 @@ export default function FitnessSeminarForm() {
                   </p>
                   <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-gray-700">
                     <li>
-                      <strong>bKash:</strong> 01XXXXXXXXX (Personal)
+                      <strong>bKash:</strong> 01985540923 (Personal)
                     </li>
                     <li>
-                      <strong>Nagad:</strong> 01XXXXXXXXX (Personal)
+                      <strong>Nagad:</strong> 01985540923 (Personal)
                     </li>
                     <li>
-                      <strong>Rocket:</strong> 01XXXXXXXXX (Personal)
+                      <strong>Rocket:</strong> 01985540923 (Personal)
                     </li>
                   </ul>
                 </div>
@@ -235,6 +237,25 @@ export default function FitnessSeminarForm() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="e.g., 01xxxxxxxxx"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Your active email for confirmation"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
               />

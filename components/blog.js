@@ -1,7 +1,13 @@
 // components/BlogSection.jsx
 import React, { useState, useEffect } from "react";
 import { db } from "../lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  Timestamp,
+} from "firebase/firestore";
 import Link from "next/link";
 
 // Simple spinner for loading state
@@ -60,7 +66,7 @@ const BlogSection = () => {
             description: data.description || "",
             author: data.author || "Unknown",
             image: data.image || "/default-blog.jpg",
-            createdAt: data.createdAt,
+            createdAt: data.createdAt, // Keep as Firestore Timestamp object for timeAgo function
           };
         });
 
@@ -97,14 +103,12 @@ const BlogSection = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogs.map((blog) => (
             <article
               key={blog.id}
-              className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transform transition-transform hover:scale-105 duration-300 group"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transform transition-transform hover:scale-105 duration-300 group flex flex-col"
             >
-              <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-red-500 transition-all duration-300 -z-10" />
-
               <div className="h-48 bg-gray-200 dark:bg-gray-700">
                 <img
                   src={blog.image}
@@ -117,23 +121,28 @@ const BlogSection = () => {
                 />
               </div>
 
-              <div className="p-4 flex flex-col h-full">
-                <h3 className="font-semibold text-lg text-pink-600 dark:text-pink-400 mb-2">
+              <div className="p-5 flex flex-col flex-grow">
+                <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                   {blog.title}
                 </h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
+                <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 flex-grow">
                   {blog.description}
                 </p>
-                <div className="mt-auto text-gray-600 dark:text-gray-400 text-sm mb-2">
-                  By {blog.author} • {timeAgo(blog.createdAt)}
-                </div>
 
-                <Link
-                  href={`/blog/${blog.id}`}
-                  className="self-end text-sm text-blue-500 hover:underline"
-                >
-                  Read more…
-                </Link>
+                {/* ## FIX IS HERE ## */}
+                {/* This footer is pushed to the bottom of the card with mt-auto */}
+                <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">
+                    By {blog.author} &bull; {timeAgo(blog.createdAt)}
+                  </div>
+
+                  <Link
+                    href={`/blog/${blog.id}`}
+                    className="text-sm font-semibold text-blue-600 hover:underline"
+                  >
+                    Read more &rarr;
+                  </Link>
+                </div>
               </div>
             </article>
           ))}
