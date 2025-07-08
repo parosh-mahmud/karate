@@ -313,7 +313,7 @@ export default function FitnessSeminarForm() {
                     htmlFor="paymentMethod"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Payment Method Used
+                    Payment Method Used (01985540923 - bKash/Nagad/Rocket)
                   </label>
                   <select
                     name="paymentMethod"
