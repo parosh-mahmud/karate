@@ -771,32 +771,48 @@ export default function Navbar() {
                 >
                   <Link
                     href={item.href}
-                    className={`${linkBaseClass} ${router.pathname.startsWith(item.href) || item.children.some((c) => router.pathname.startsWith(c.href)) ? linkActiveClass : linkInactiveClass} flex items-center`}
+                    className={`${linkBaseClass} ${
+                      router.pathname.startsWith(item.href) ||
+                      item.children.some((c) =>
+                        router.pathname.startsWith(c.href)
+                      )
+                        ? linkActiveClass
+                        : linkInactiveClass
+                    } flex items-center`}
                   >
                     {item.name}
                     <ChevronDownIcon className="w-4 h-4 ml-1" />
                   </Link>
-                  {openDropdown === item.name && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 z-50">
-                      <div className="py-1">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.name}
-                            href={child.href}
-                            className="block px-4 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
-                          >
-                            {child.name}
-                          </Link>
-                        ))}
-                      </div>
+                  {/* Dropdown: show if openDropdown === item.name */}
+                  <div
+                    className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 z-50 transition-all duration-150 ${
+                      openDropdown === item.name
+                        ? "opacity-100 visible"
+                        : "opacity-0 invisible pointer-events-none"
+                    }`}
+                  >
+                    <div className="py-1">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.name}
+                          href={child.href}
+                          className="block px-4 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
                     </div>
-                  )}
+                  </div>
                 </div>
               ) : (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`${linkBaseClass} ${router.pathname === item.href ? linkActiveClass : linkInactiveClass}`}
+                  className={`${linkBaseClass} ${
+                    router.pathname === item.href
+                      ? linkActiveClass
+                      : linkInactiveClass
+                  }`}
                 >
                   {item.name}
                 </Link>

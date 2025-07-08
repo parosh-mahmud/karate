@@ -32,7 +32,7 @@ const RunningSeminarForm = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const SEMINAR_FEE = 600;
+  const SEMINAR_FEE = 500;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -425,6 +425,7 @@ const RunningSeminarForm = () => {
                     </option>
                     <option value="Bkash">bKash</option>
                     <option value="Nagad">Nagad</option>
+                    <option value="Rocket">Rocket</option>
                   </select>
                 </div>
                 <div>
@@ -501,7 +502,7 @@ const RunningSeminarForm = () => {
                       </p>
                       <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-sm text-gray-700">
                         <li>
-                          <strong>bKash/Nagad:</strong> 01985540923
+                          <strong>bKash/Nagad/Rocket:</strong> 01985540923
                         </li>
                       </ul>
                     </div>
