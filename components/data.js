@@ -9,7 +9,7 @@ import {
 
 // Cloudinary image URLs
 const benefitOneImg =
-  "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/DSC07253.jpg?alt=media&token=ef777603-e0e5-45db-ac83-b5d52525c60b";
+  "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/galleryImages%2F57d36c1d-197e-4612-ad1d-f4c68a3a30f6-Untitled-1.jpg?alt=media&token=4e124f61-0540-48a0-aa91-314f5e3df993";
 const benefitTwoImg =
   "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/DSC07253.jpg?alt=media&token=ef777603-e0e5-45db-ac83-b5d52525c60b";
 
