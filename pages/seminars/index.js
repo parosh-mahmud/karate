@@ -9,7 +9,7 @@ const seminars = [
     description:
       "🏃‍♂️ দৌড় প্রতিযোগিতা, সচেতনতামূলক বার্তা ও আকর্ষণীয় পুরস্কার! আপনার বয়স ও সাইজ অনুযায়ী টি-শার্ট, ম্যাপসহ অংশগ্রহণ নিশ্চিত করুন।",
     banner:
-      "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/galleryImages%2F129ee04f-0ee6-4a2c-9a3d-86b2802c5b94-IMG_0983.JPG?alt=media&token=5c5afafd-db2c-4635-86f9-cb218d2fbc1a",
+      "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run.jpeg?alt=media&token=cf62ce34-5f67-4bb0-a714-a0d5b01f5331",
   },
   {
     id: "fitness",

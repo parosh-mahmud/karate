@@ -1,9 +1,13 @@
 // components/seminars/FitnessSeminarForm.js
 import { useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc, // Import doc
+  runTransaction, // Import runTransaction
+  serverTimestamp,
+} from "firebase/firestore";
 
-// Example Heroicons for the new layout
 import {
   UserIcon,
   AcademicCapIcon,
@@ -29,13 +33,14 @@ export default function FitnessSeminarForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const SEMINAR_FEE = 50; // Seminar fee in BDT
+  const SEMINAR_FEE = 50;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
+  // ## UPDATED: handleSubmit function now uses a Transaction ##
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -43,12 +48,34 @@ export default function FitnessSeminarForm() {
     setSuccess(false);
 
     try {
-      await addDoc(collection(db, "fitness_registrations"), {
-        ...form,
-        seminarFee: SEMINAR_FEE,
-        status: "pending",
-        createdAt: serverTimestamp(),
+      // Define a reference to the specific counter for fitness registrations
+      const counterRef = doc(db, "counters", "fitness_registrations_counter");
+
+      // Run the transaction
+      await runTransaction(db, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        if (!counterDoc.exists()) {
+          throw new Error(
+            "Counter document is missing! Please create it in Firestore."
+          );
+        }
+
+        const newRegNumber = counterDoc.data().currentNumber + 1;
+        const newRegRef = doc(collection(db, "fitness_registrations"));
+
+        // Set the new registration document with the unique number
+        transaction.set(newRegRef, {
+          ...form,
+          registrationNumber: newRegNumber, // Add the unique number
+          seminarFee: SEMINAR_FEE,
+          status: "pending",
+          createdAt: serverTimestamp(),
+        });
+
+        // Update the counter
+        transaction.update(counterRef, { currentNumber: newRegNumber });
       });
+
       setSuccess(true);
       setForm({
         name: "",
@@ -82,7 +109,6 @@ export default function FitnessSeminarForm() {
           </p>
         </div>
 
-        {/* Banner Image */}
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl aspect-w-16 aspect-h-7">
           <img
             src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/fitness.jpg?alt=media&token=2a9d4a0e-8677-423a-a4f8-bd128537af15"
@@ -91,11 +117,9 @@ export default function FitnessSeminarForm() {
           />
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12">
           {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
-            {/* ## NICELY FORMATTED BANGLA TEXT ## */}
             <div className="font-bangla bg-white p-8 rounded-xl shadow-lg mb-8">
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
                 জুলাই অভ্যুত্থানের পর আমরা বুঝেছি আত্মরক্ষা কৌশল শেখা কতটা
@@ -104,7 +128,6 @@ export default function FitnessSeminarForm() {
                 রয়েছে। এজন্যই ঢাকা বিশ্ববিদ্যালয়ের শিক্ষার্থীদের জন্য এই
                 সেমিনারের আয়োজন।
               </p>
-
               <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-teal-500 pb-2">
                 আমাদের বক্তারা
               </h3>
@@ -137,7 +160,6 @@ export default function FitnessSeminarForm() {
                   </span>
                 </li>
               </ul>
-
               <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-teal-500 pb-2">
                 অংশগ্রহণকারীদের জন্য
               </h3>
@@ -156,7 +178,6 @@ export default function FitnessSeminarForm() {
                   </span>
                 </li>
               </ul>
-
               <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-md">
                 <p className="font-bold">দ্রুত রেজিস্ট্রেশন করুন!</p>
                 <p>
@@ -166,7 +187,6 @@ export default function FitnessSeminarForm() {
               </div>
             </div>
 
-            {/* Registration Form Section */}
             <div className="bg-white p-8 rounded-2xl shadow-xl">
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
                 Registration Form
@@ -192,13 +212,11 @@ export default function FitnessSeminarForm() {
                   <p>{error}</p>
                 </div>
               )}
-
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
                 noValidate
               >
-                {/* Form fields... */}
                 <div>
                   <label
                     htmlFor="name"
@@ -313,7 +331,7 @@ export default function FitnessSeminarForm() {
                     htmlFor="paymentMethod"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Payment Method Used (01985540923 - bKash/Nagad/Rocket)
+                    Payment Method Used
                   </label>
                   <select
                     name="paymentMethod"
@@ -364,8 +382,7 @@ export default function FitnessSeminarForm() {
 
           {/* Right Column: Sticky Sidebar with Payment Info */}
           <div className="lg:col-span-1">
-            <div className="lg:sticky top-24 space-y-8">
-              {/* Event Details Box */}
+            <div className="lg:sticky top-24 space-y-8 mt-8 lg:mt-0">
               <div className="bg-white p-6 rounded-xl shadow-lg border">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Event Details
@@ -385,8 +402,6 @@ export default function FitnessSeminarForm() {
                   </li>
                 </ul>
               </div>
-
-              {/* ## PAYMENT INSTRUCTIONS AT RIGHT SECTION ## */}
               <div className="bg-teal-50 border border-teal-200 p-6 rounded-lg">
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">
                   Registration & Payment

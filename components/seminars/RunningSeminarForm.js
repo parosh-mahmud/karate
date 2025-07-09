@@ -1,7 +1,12 @@
 // components/seminars/RunningSeminarForm.jsx
 import { useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  runTransaction, // Import runTransaction and doc
+  serverTimestamp,
+} from "firebase/firestore";
 import {
   CalendarIcon,
   ClockIcon,
@@ -18,7 +23,9 @@ const RunningSeminarForm = () => {
     age: "",
     gender: "",
     occupation: "",
-    institution: "",
+
+    hall: "", // Added hall
+    session: "", // Added session
     nid: "",
     tshirtSize: "",
     address: "",
@@ -38,6 +45,7 @@ const RunningSeminarForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ## UPDATED: handleSubmit function now uses a Transaction ##
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -45,18 +53,49 @@ const RunningSeminarForm = () => {
     setSuccess(false);
 
     try {
-      await addDoc(collection(db, "running_registrations"), {
-        ...formData,
-        seminarFee: SEMINAR_FEE,
-        status: "pending",
-        createdAt: serverTimestamp(),
+      // Define a reference to the counter document
+      const counterRef = doc(db, "counters", "running_registrations_counter");
+
+      // Run the transaction
+      await runTransaction(db, async (transaction) => {
+        // 1. Read the counter document
+        const counterDoc = await transaction.get(counterRef);
+        if (!counterDoc.exists()) {
+          throw new Error(
+            "Counter document does not exist! Please create it in Firestore."
+          );
+        }
+
+        // 2. Calculate the new unique registration number
+        const newRegistrationNumber = counterDoc.data().currentNumber + 1;
+
+        // 3. Define the new registration document reference
+        const newRegRef = doc(collection(db, "running_registrations"));
+
+        // 4. Create the new registration document within the transaction
+        transaction.set(newRegRef, {
+          ...formData,
+          registrationNumber: newRegistrationNumber, // Add the unique number
+          seminarFee: SEMINAR_FEE,
+          status: "pending",
+          createdAt: serverTimestamp(),
+        });
+
+        // 5. Update the counter document with the new number
+        transaction.update(counterRef, {
+          currentNumber: newRegistrationNumber,
+        });
       });
+
       setSuccess(true);
+      // Reset form after successful submission
       setFormData({
         name: "",
         age: "",
         gender: "",
         occupation: "",
+        hall: "",
+        session: "",
         institution: "",
         nid: "",
         tshirtSize: "",
@@ -69,7 +108,7 @@ const RunningSeminarForm = () => {
     } catch (err) {
       console.error("Error submitting form:", err);
       setError(
-        "Failed to submit your registration. Please check your details and try again."
+        "Failed to submit your registration. Please check details and try again."
       );
     } finally {
       setSubmitting(false);
@@ -87,8 +126,8 @@ const RunningSeminarForm = () => {
 
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl aspect-w-16 aspect-h-9">
           <img
-            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/galleryImages%2F129ee04f-0ee6-4a2c-9a3d-86b2802c5b94-IMG_0983.JPG?alt=media&token=5c5afafd-db2c-4635-86f9-cb218d2fbc1a"
-            alt="Running Seminar Banner"
+            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run.jpeg?alt=media&token=cf62ce34-5f67-4bb0-a714-a0d5b01f5331"
+            alt="Running Event Banner"
             className="w-full h-full object-cover"
           />
         </div>
@@ -97,6 +136,7 @@ const RunningSeminarForm = () => {
           {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
             <div className="bg-white p-8 rounded-xl shadow-lg mb-8 font-bangla">
+              {/* Event Details and other text content */}
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
                 'জুলাই'- ইংরেজি ক্যালেন্ডারের একটি মাস হলেও আমাদের জন্য তা এক
                 অবিস্মরণীয় অধ্যায়, সাহসিকতার প্রতীক। বৈষম্য এবং অন্যায়ের
@@ -112,7 +152,6 @@ const RunningSeminarForm = () => {
                 মেডেল, আর রিবনে ফুটে উঠেছে জুলাই গ্রাফিতি! আকর্ষণীয় মেডেলটি
                 অর্জনের জন্য এখনই রেজিস্ট্রেশন করুন!
               </p>
-
               <div className="p-6 bg-slate-50 rounded-lg border mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   ইভেন্ট এক নজরে
@@ -138,7 +177,6 @@ const RunningSeminarForm = () => {
                   </p>
                 </div>
               </div>
-
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 যা যা থাকছে অংশগ্রহণকারীদের জন্য:
               </h3>
@@ -156,7 +194,6 @@ const RunningSeminarForm = () => {
                   <span>সকালের নাস্তা এবং সেরা রানারদের জন্য পুরস্কার</span>
                 </li>
               </ul>
-
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 পার্টনারস
               </h3>
@@ -171,7 +208,6 @@ const RunningSeminarForm = () => {
                   <strong>কমিউনিটি:</strong> Morning Raiders
                 </p>
               </div>
-
               <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-md">
                 <p className="font-bold">বিশেষ দ্রষ্টব্য:</p>
                 <ul className="list-disc list-inside text-sm mt-2">
@@ -213,6 +249,7 @@ const RunningSeminarForm = () => {
                   <p>{error}</p>
                 </div>
               )}
+
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
@@ -293,20 +330,36 @@ const RunningSeminarForm = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+
                 <div>
                   <label
-                    htmlFor="institution"
+                    htmlFor="hall"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Institution
+                    Hall (if DU Student)
                   </label>
                   <input
                     type="text"
-                    name="institution"
-                    id="institution"
-                    value={formData.institution}
+                    name="hall"
+                    id="hall"
+                    value={formData.hall}
                     onChange={handleChange}
-                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="session"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Session (if DU Student)
+                  </label>
+                  <input
+                    type="text"
+                    name="session"
+                    id="session"
+                    value={formData.session}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -410,7 +463,7 @@ const RunningSeminarForm = () => {
                     htmlFor="paymentMethod"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Payment Method (01985540923 - bKash/Nagad/Rocket)
+                    Payment Method
                   </label>
                   <select
                     name="paymentMethod"
@@ -482,7 +535,7 @@ const RunningSeminarForm = () => {
               </div>
               <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                  Registration Fee & Payment
+                  Registration & Payment
                 </h3>
                 <p className="text-gray-700 mb-5 text-lg">
                   Fee:{" "}
@@ -502,7 +555,10 @@ const RunningSeminarForm = () => {
                       </p>
                       <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-sm text-gray-700">
                         <li>
-                          <strong>bKash/Nagad/Rocket:</strong> 01985540923
+                          <strong>bKash/Rocket:</strong> 01985540923
+                        </li>
+                        <li>
+                          <strong>Nagad:</strong> 01780941195
                         </li>
                       </ul>
                     </div>

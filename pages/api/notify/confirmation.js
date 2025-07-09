@@ -10,31 +10,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, email } = req.body;
+    // ## MODIFIED: Destructure registrationNumber ##
+    const { name, email, registrationNumber } = req.body;
 
-    if (!name || !email) {
-      return res.status(400).json({ error: "Name and email are required." });
+    if (!name || !email || !registrationNumber) {
+      return res
+        .status(400)
+        .json({ error: "Name, email, and registration number are required." });
     }
 
     const { data, error } = await resend.emails.send({
-      from: "JK Combat Academy <support@jkcombatacademy.com>", // MUST be a verified domain in Resend
+      from: "JK Combat <support@jkcombatacademy.com>", // Use your verified domain
       to: [email],
-      subject: "Your Running Seminar Registration is Confirmed!",
-      react: ConfirmationEmail({ name }),
+      subject: `Registration Confirmed for July Run 5k (Reg #${registrationNumber})`,
+
+      // ## MODIFIED: Pass prop to the component ##
+      react: ConfirmationEmail({ name, registrationNumber }),
     });
 
     if (error) {
-      console.error("Resend error:", error);
       return res
         .status(400)
         .json({ error: "Failed to send confirmation email." });
     }
 
-    res
-      .status(200)
-      .json({ message: "Confirmation email sent successfully.", data });
+    res.status(200).json({ message: "Confirmation email sent successfully." });
   } catch (error) {
-    console.error("API error:", error);
     res.status(500).json({ error: "An internal server error occurred." });
   }
 }

@@ -7,16 +7,18 @@ import {
   Html,
   Preview,
   Text,
-  Button,
   Section,
 } from "@react-email/components";
 
-export const FitnessConfirmationEmail = ({ name = "Participant" }) => (
+export const FitnessConfirmationEmail = ({
+  name = "Participant",
+  registrationNumber = "N/A",
+}) => (
   <Html>
     <Head />
     <Preview>Your Fitness Seminar Registration is Confirmed!</Preview>
     <Body
-      style={{ backgroundColor: "#f6f9fc", fontFamily: "Arial, sans-serif" }}
+      style={{ backgroundColor: "#f7fafc", fontFamily: "Arial, sans-serif" }}
     >
       <Container
         style={{
@@ -29,8 +31,8 @@ export const FitnessConfirmationEmail = ({ name = "Participant" }) => (
         }}
       >
         <Section style={{ padding: "24px", textAlign: "center" }}>
-          <Heading style={{ color: "#1a202c", fontSize: "24px" }}>
-            Fitness Registration Confirmed!
+          <Heading style={{ color: "#2d3748", fontSize: "24px" }}>
+            Registration Confirmed!
           </Heading>
           <Text
             style={{ color: "#4a5568", fontSize: "16px", lineHeight: "24px" }}
@@ -40,29 +42,49 @@ export const FitnessConfirmationEmail = ({ name = "Participant" }) => (
           <Text
             style={{ color: "#4a5568", fontSize: "16px", lineHeight: "24px" }}
           >
-            This email confirms your registration for the **JK Combat Fitness
-            Seminar**. Your payment has been verified.
+            We're excited to confirm your registration for the **JK Combat
+            Fitness & Self-Defense Seminar**. Your payment has been verified.
           </Text>
-          <Text
-            style={{ color: "#4a5568", fontSize: "16px", lineHeight: "24px" }}
-          >
-            Get ready to kickstart your health and wellness journey. We can't
-            wait to see you!
-          </Text>
-          <Button
-            href="https://yourwebsite.com"
+
+          <Section
             style={{
-              backgroundColor: "#0d9488",
-              color: "#ffffff",
-              padding: "12px 20px",
-              borderRadius: "6px",
-              textDecoration: "none",
+              border: "1px solid #e2e8f0",
+              borderRadius: "5px",
+              padding: "10px 20px",
               marginTop: "20px",
-              display: "inline-block",
             }}
           >
-            Visit Our Website
-          </Button>
+            <Text style={{ color: "#4a5568", fontSize: "14px" }}>
+              Your Official Registration Number is:
+            </Text>
+            <Text
+              style={{
+                color: "#14b8a6",
+                fontSize: "28px",
+                fontWeight: "bold",
+                margin: "0",
+              }}
+            >
+              #{registrationNumber}
+            </Text>
+            <Text
+              style={{ color: "#718096", fontSize: "12px", marginTop: "5px" }}
+            >
+              Please keep this number for your reference.
+            </Text>
+          </Section>
+
+          <Text
+            style={{
+              color: "#4a5568",
+              fontSize: "16px",
+              lineHeight: "24px",
+              marginTop: "20px",
+            }}
+          >
+            Get ready for an informative and empowering session. We look forward
+            to seeing you there!
+          </Text>
         </Section>
       </Container>
     </Body>
