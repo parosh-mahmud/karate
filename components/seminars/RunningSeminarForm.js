@@ -123,7 +123,7 @@ const RunningSeminarForm = () => {
 
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl aspect-w-16 aspect-h-9">
           <img
-            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july.jpg?alt=media&token=32948604-915c-4cb2-913a-7f6fb4d50903"
+            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468"
             alt="Running Event Banner"
             className="w-full h-full object-cover"
           />
