@@ -24,8 +24,6 @@ const RunningSeminarForm = () => {
     gender: "",
     occupation: "",
 
-    hall: "", // Added hall
-    session: "", // Added session
     nid: "",
     tshirtSize: "",
     address: "",
@@ -39,7 +37,7 @@ const RunningSeminarForm = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const SEMINAR_FEE = 500;
+  const SEMINAR_FEE = 700;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -94,8 +92,7 @@ const RunningSeminarForm = () => {
         age: "",
         gender: "",
         occupation: "",
-        hall: "",
-        session: "",
+
         institution: "",
         nid: "",
         tshirtSize: "",
@@ -126,7 +123,7 @@ const RunningSeminarForm = () => {
 
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl aspect-w-16 aspect-h-9">
           <img
-            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run.jpeg?alt=media&token=cf62ce34-5f67-4bb0-a714-a0d5b01f5331"
+            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july.jpg?alt=media&token=32948604-915c-4cb2-913a-7f6fb4d50903"
             alt="Running Event Banner"
             className="w-full h-full object-cover"
           />
@@ -158,7 +155,7 @@ const RunningSeminarForm = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                   <p>
-                    <strong>ইভেন্ট:</strong> July Run 5k
+                    <strong>ইভেন্ট:</strong> July Run 2025
                   </p>
                   <p>
                     <strong>ভেনুঃ</strong> টিএসসি, ঢাকা বিশ্ববিদ্যালয়
@@ -168,6 +165,9 @@ const RunningSeminarForm = () => {
                   </p>
                   <p>
                     <strong>দূরত্ব:</strong> ৫ কিলোমিটার
+                  </p>
+                  <p>
+                    <strong>সময়:</strong> ১ ঘণ্টা
                   </p>
                   <p>
                     <strong>রেজিস্ট্রেশন ডেডলাইন:</strong> ২০ জুলাই, ২০২৫
@@ -228,27 +228,6 @@ const RunningSeminarForm = () => {
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
                 Registration Form
               </h2>
-              {success && (
-                <div
-                  className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
-                  role="alert"
-                >
-                  <p className="font-bold">Registration Submitted!</p>
-                  <p>
-                    Thank you. Your submission is received and will be verified
-                    soon.
-                  </p>
-                </div>
-              )}
-              {error && (
-                <div
-                  className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
-                  role="alert"
-                >
-                  <p className="font-bold">Submission Failed</p>
-                  <p>{error}</p>
-                </div>
-              )}
 
               <form
                 onSubmit={handleSubmit}
@@ -331,38 +310,6 @@ const RunningSeminarForm = () => {
                   />
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="hall"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Hall (if DU Student)
-                  </label>
-                  <input
-                    type="text"
-                    name="hall"
-                    id="hall"
-                    value={formData.hall}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="session"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Session (if DU Student)
-                  </label>
-                  <input
-                    type="text"
-                    name="session"
-                    id="session"
-                    value={formData.session}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
                 <div>
                   <label
                     htmlFor="nid"
@@ -604,6 +551,27 @@ const RunningSeminarForm = () => {
                   </ul>
                 </div>
               </div>
+              {success && (
+                <div
+                  className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
+                  role="alert"
+                >
+                  <p className="font-bold">Registration Submitted!</p>
+                  <p>
+                    Thank you. Your submission is received and will be verified
+                    soon.
+                  </p>
+                </div>
+              )}
+              {error && (
+                <div
+                  className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
+                  role="alert"
+                >
+                  <p className="font-bold">Submission Failed</p>
+                  <p>{error}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

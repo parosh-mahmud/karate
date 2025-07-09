@@ -56,7 +56,7 @@ export const ConfirmationEmail = ({
             }}
           >
             <Text style={{ color: "#4a5568", fontSize: "14px" }}>
-              Your Official Registration Number is:
+              Your Registration Number is:
             </Text>
             <Text
               style={{

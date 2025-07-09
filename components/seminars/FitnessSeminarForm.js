@@ -21,6 +21,8 @@ export default function FitnessSeminarForm() {
   const [form, setForm] = useState({
     name: "",
     department: "",
+    hall: "", // <-- added
+    session: "", // <-- added
     phone: "",
     email: "",
     question: "",
@@ -80,6 +82,8 @@ export default function FitnessSeminarForm() {
       setForm({
         name: "",
         department: "",
+        hall: "", // <-- added
+        session: "", // <-- added
         phone: "",
         email: "",
         question: "",
@@ -191,27 +195,7 @@ export default function FitnessSeminarForm() {
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
                 Registration Form
               </h2>
-              {success && (
-                <div
-                  className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
-                  role="alert"
-                >
-                  <p className="font-bold">Registration Submitted!</p>
-                  <p>
-                    Thank you. We have received your submission and will confirm
-                    it after payment verification.
-                  </p>
-                </div>
-              )}
-              {error && (
-                <div
-                  className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
-                  role="alert"
-                >
-                  <p className="font-bold">Submission Failed</p>
-                  <p>{error}</p>
-                </div>
-              )}
+
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
@@ -249,6 +233,42 @@ export default function FitnessSeminarForm() {
                     value={form.department}
                     onChange={handleChange}
                     placeholder="Your Department or Institution"
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="hall"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Hall
+                  </label>
+                  <input
+                    type="text"
+                    name="hall"
+                    id="hall"
+                    value={form.hall}
+                    onChange={handleChange}
+                    placeholder="Your Hall Name"
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="session"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Session
+                  </label>
+                  <input
+                    type="text"
+                    name="session"
+                    id="session"
+                    value={form.session}
+                    onChange={handleChange}
+                    placeholder="e.g., 2021-22"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
                   />
@@ -464,6 +484,27 @@ export default function FitnessSeminarForm() {
                     </div>
                   </div>
                 </div>
+                {success && (
+                  <div
+                    className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
+                    role="alert"
+                  >
+                    <p className="font-bold">Registration Submitted!</p>
+                    <p>
+                      Thank you. We have received your submission and will
+                      confirm it after payment verification.
+                    </p>
+                  </div>
+                )}
+                {error && (
+                  <div
+                    className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
+                    role="alert"
+                  >
+                    <p className="font-bold">Submission Failed</p>
+                    <p>{error}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

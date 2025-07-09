@@ -42,8 +42,8 @@ export const FitnessConfirmationEmail = ({
           <Text
             style={{ color: "#4a5568", fontSize: "16px", lineHeight: "24px" }}
           >
-            We're excited to confirm your registration for the **JK Combat
-            Fitness & Self-Defense Seminar**. Your payment has been verified.
+            We're excited to confirm your registration for the ** Fitness &
+            Self-Defense Seminar**. Your payment has been verified.
           </Text>
 
           <Section
@@ -55,7 +55,7 @@ export const FitnessConfirmationEmail = ({
             }}
           >
             <Text style={{ color: "#4a5568", fontSize: "14px" }}>
-              Your Official Registration Number is:
+              Your Registration Number is:
             </Text>
             <Text
               style={{

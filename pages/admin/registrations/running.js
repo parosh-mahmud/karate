@@ -61,10 +61,8 @@ const XIcon = () => (
   </svg>
 );
 
-// --- Details Modal Component ---
 const DetailsModal = ({ registration, onClose }) => {
   if (!registration) return null;
-
   const DetailItem = ({ label, value }) => (
     <div className="py-2">
       <p className="text-xs font-semibold text-gray-500 uppercase">{label}</p>
@@ -73,7 +71,6 @@ const DetailsModal = ({ registration, onClose }) => {
       </p>
     </div>
   );
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-2xl w-full">
@@ -127,14 +124,16 @@ export default function RunningRegistrationsPage() {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [updatingId, setUpdatingId] = useState(null);
-
-  // State for the details modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReg, setSelectedReg] = useState(null);
+
+  // ## NEW ## - State for delete confirmation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [regToDelete, setRegToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -143,12 +142,10 @@ export default function RunningRegistrationsPage() {
     );
     const unsubscribe = onSnapshot(
       q,
-      (querySnapshot) => {
-        const regs = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setRegistrations(regs);
+      (snapshot) => {
+        setRegistrations(
+          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
         setLoading(false);
       },
       (err) => {
@@ -160,11 +157,11 @@ export default function RunningRegistrationsPage() {
   }, []);
 
   const handleUpdateStatus = async (registration) => {
+    // This function remains the same
     setUpdatingId(registration.id);
     const currentStatus = registration.status || "pending";
     const newStatus = currentStatus === "pending" ? "confirmed" : "pending";
     const regRef = doc(db, "running_registrations", registration.id);
-
     try {
       await updateDoc(regRef, { status: newStatus });
       if (newStatus === "confirmed") {
@@ -173,14 +170,9 @@ export default function RunningRegistrationsPage() {
           !registration.email ||
           !registration.registrationNumber
         ) {
-          alert(
-            `Warning: Registration confirmed, but email could not be sent because contact details are incomplete.`
-          );
-          setUpdatingId(null);
+          alert(`Warning: Incomplete details. Email not sent.`);
           return;
         }
-
-        // ## MODIFIED ## - Sending registration number to the API
         await fetch("/api/notify/confirmation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -203,6 +195,37 @@ export default function RunningRegistrationsPage() {
     setIsModalOpen(true);
   };
 
+  // ## NEW ## - Functions for delete functionality
+  const openDeleteModal = (registration) => {
+    setRegToDelete(registration);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!regToDelete) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/events/running_registrations/${regToDelete.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to delete registration from server.");
+      }
+      // UI will update automatically via onSnapshot listener
+      setShowDeleteModal(false);
+      setRegToDelete(null);
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Could not delete registration.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Other functions (filteredRegistrations, handleExportCSV) remain the same
   const filteredRegistrations = useMemo(() => {
     return registrations
       .filter((reg) =>
@@ -221,7 +244,6 @@ export default function RunningRegistrationsPage() {
         );
       });
   }, [registrations, searchTerm, filterStatus]);
-
   const handleExportCSV = () => {
     const headers = [
       "Reg. No",
@@ -286,6 +308,7 @@ export default function RunningRegistrationsPage() {
       </p>
 
       <div className="mb-6 p-4 bg-white dark:bg-slate-800 rounded-lg shadow flex flex-col md:flex-row gap-4 items-center">
+        {/* Search and filter controls remain the same */}
         <div className="relative flex-grow w-full md:w-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon />
@@ -384,23 +407,31 @@ export default function RunningRegistrationsPage() {
                       {reg.status || "pending"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex">
+
+                  {/* ## MODIFIED ## - Actions column with new Delete button */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex items-center">
                     <button
                       onClick={() => handleViewDetails(reg)}
-                      className="px-3 py-1 rounded-md text-white font-semibold bg-blue-500 hover:bg-blue-600 transition"
+                      className="p-2 rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 transition"
                     >
                       View
                     </button>
                     <button
                       onClick={() => handleUpdateStatus(reg)}
                       disabled={updatingId === reg.id}
-                      className={`px-3 py-1 rounded-md text-white font-semibold transition w-32 text-center ${updatingId === reg.id ? "bg-gray-400 cursor-not-allowed" : (reg.status || "pending") === "confirmed" ? "bg-yellow-500 hover:bg-yellow-600" : "bg-green-500 hover:bg-green-600"}`}
+                      className={`px-3 py-1.5 rounded-md text-white font-semibold transition w-28 text-center ${updatingId === reg.id ? "bg-gray-400" : (reg.status || "pending") === "confirmed" ? "bg-yellow-500 hover:bg-yellow-600" : "bg-green-500 hover:bg-green-600"}`}
                     >
                       {updatingId === reg.id
-                        ? "Updating..."
+                        ? "..."
                         : (reg.status || "pending") === "confirmed"
                           ? "Set Pending"
                           : "Confirm"}
+                    </button>
+                    <button
+                      onClick={() => openDeleteModal(reg)}
+                      className="p-2 rounded-md text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 transition"
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -409,11 +440,40 @@ export default function RunningRegistrationsPage() {
           </table>
         )}
       </div>
+
+      {/* ## NEW ## - Render modals */}
       {isModalOpen && (
         <DetailsModal
           registration={selectedReg}
           onClose={() => setIsModalOpen(false)}
         />
+      )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-8 max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
+              Are you sure you want to delete the registration for **
+              {regToDelete?.name}**? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="py-2 px-4 bg-slate-200 hover:bg-slate-300 font-semibold rounded-lg dark:bg-slate-600 dark:hover:bg-slate-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
