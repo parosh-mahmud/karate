@@ -1,9 +1,7 @@
 // components/seminars/RunningSeminarForm.jsx
-import { useState } from "react";
-import Image from "next/image"; // Import the Next.js Image component
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { db } from "@/lib/firebase";
-import { useEffect } from "react";
-
 import {
   collection,
   doc,
@@ -11,14 +9,11 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import {
-  CalendarIcon,
   ClockIcon,
-  LocationMarkerIcon,
-  GiftIcon,
-  PhoneIcon,
   FlagIcon,
+  LocationMarkerIcon,
+  PhoneIcon,
 } from "@heroicons/react/outline";
-import { FaFacebookSquare } from "react-icons/fa"; // npm install react-icons
 
 const RunningSeminarForm = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +22,6 @@ const RunningSeminarForm = () => {
     gender: "",
     occupation: "",
     institution: "",
-
     nid: "",
     tshirtSize: "",
     address: "",
@@ -37,21 +31,12 @@ const RunningSeminarForm = () => {
     transactionNumber: "",
   });
 
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
-  // Toast state
   const [showToast, setShowToast] = useState(false);
   const SEMINAR_FEE = 700;
-  const shareUrl = "https://www.jkcombatacademy.com/seminars/run"; // Replace with your actual event URL
-  const shareText = encodeURIComponent(
-    "Join the July Run 2025! Register now and be part of the event."
-  );
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-  // Show toast when success changes to true
   useEffect(() => {
     if (success) {
       setShowToast(true);
@@ -60,10 +45,81 @@ const RunningSeminarForm = () => {
     }
   }, [success]);
 
+  const validateField = (name, value) => {
+    switch (name) {
+      case "name":
+        return value.trim() ? "" : "Full Name is required.";
+      case "age":
+        if (!value) return "Age is required.";
+        if (!/^\d+$/.test(value) || parseInt(value, 10) < 10)
+          return "Please enter a valid age (minimum 10).";
+        return "";
+      case "gender":
+        return value ? "" : "Please select your gender.";
+      case "occupation":
+        return value.trim() ? "" : "Occupation is required.";
+      case "nid":
+        return value.trim() ? "" : "NID or Birth Certificate is required.";
+      case "tshirtSize":
+        return value ? "" : "Please select your T-shirt size.";
+      case "address":
+        return value.trim() ? "" : "Full Address is required.";
+      case "phone":
+        if (!value) return "Phone number is required.";
+        if (!/^01[3-9]\d{8}$/.test(value))
+          return "Please enter a valid 11-digit Bangladeshi phone number.";
+        return "";
+      case "email":
+        if (!value) return "Email is required.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Please enter a valid email address.";
+        return "";
+      case "paymentMethod":
+        return value ? "" : "Please select a payment method.";
+      case "transactionNumber":
+        return value.trim() ? "" : "Transaction ID (TrxID) is required.";
+      // 'institution' is optional, so no validation needed
+      default:
+        return "";
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) {
+      const error = validateField(name, value);
+      setErrors({ ...errors, [name]: error });
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors({ ...errors, [name]: error });
+  };
+
+  const validateForm = () => {
+    const formErrors = {};
+    let isValid = true;
+    for (const [key, value] of Object.entries(formData)) {
+      const error = validateField(key, value);
+      if (error) {
+        formErrors[key] = error;
+        isValid = false;
+      }
+    }
+    setErrors(formErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
     setSubmitting(true);
-    setError("");
     setSuccess(false);
 
     try {
@@ -71,12 +127,11 @@ const RunningSeminarForm = () => {
       await runTransaction(db, async (transaction) => {
         const counterDoc = await transaction.get(counterRef);
         if (!counterDoc.exists()) {
-          throw new Error(
-            "Counter document does not exist! Please create it in Firestore."
-          );
+          throw new Error("Counter document could not be found.");
         }
         const newRegistrationNumber = counterDoc.data().currentNumber + 1;
         const newRegRef = doc(collection(db, "running_registrations"));
+
         transaction.set(newRegRef, {
           ...formData,
           registrationNumber: newRegistrationNumber,
@@ -96,7 +151,6 @@ const RunningSeminarForm = () => {
         gender: "",
         occupation: "",
         institution: "",
-
         nid: "",
         tshirtSize: "",
         address: "",
@@ -105,11 +159,12 @@ const RunningSeminarForm = () => {
         paymentMethod: "",
         transactionNumber: "",
       });
+      setErrors({});
     } catch (err) {
       console.error("Error submitting form:", err);
-      setError(
-        "Failed to submit your registration. Please check details and try again."
-      );
+      setErrors({
+        form: "Failed to submit registration. Please check your connection and try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -142,52 +197,37 @@ const RunningSeminarForm = () => {
               <div>
                 <div className="font-bold">Registration Submitted!</div>
                 <div className="text-sm">
-                  Thank you. Your submission is received and will be verified
-                  soon.
+                  Thank you. Your submission will be verified soon.
                 </div>
               </div>
             </div>
           </div>
         )}
-        {/* ## FIXED IMAGE ## */}
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl">
           <div className="aspect-w-16 aspect-h-9 bg-black">
             <Image
               src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468"
               alt="Running Event Banner"
               layout="fill"
-              objectFit="contain" // Use "contain" to ensure the full image is visible
+              objectFit="contain"
+              priority
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12">
-          {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
-            {/* {success && (
-              <div
-                className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
-                role="alert"
-              >
-                <p className="font-bold">Registration Submitted!</p>
-                <p>
-                  Thank you. Your submission is received and will be verified
-                  soon.
-                </p>
-              </div>
-            )} */}
-            {error && (
+            {errors.form && (
               <div
                 className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
                 role="alert"
               >
                 <p className="font-bold">Submission Failed</p>
-                <p>{error}</p>
+                <p>{errors.form}</p>
               </div>
             )}
 
             <div className="bg-white p-8 rounded-xl shadow-lg mb-8 font-bangla">
-              {/* Event Details and other text content */}
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
                 'জুলাই'- ইংরেজি ক্যালেন্ডারের একটি মাস হলেও আমাদের জন্য তা এক
                 অবিস্মরণীয় অধ্যায়, সাহসিকতার প্রতীক। বৈষম্য এবং অন্যায়ের
@@ -202,22 +242,6 @@ const RunningSeminarForm = () => {
                 বিজয়গাঁথা বাংলাদেশের মানচিত্রে এঁকে তৈরি করা হয়েছে এক চমৎকার
                 মেডেল, আকর্ষণীয় মেডেলটি অর্জনের জন্য এখনই রেজিস্ট্রেশন করুন!
               </p>
-              {/* <div className="flex justify-center mb-6">
-                <button
-                  aria-label="Share on Facebook"
-                  onClick={() => {
-                    window.open(
-                      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${shareText}`,
-                      "_blank",
-                      "noopener,noreferrer"
-                    );
-                  }}
-                  className="text-blue-600 hover:text-blue-800 text-3xl transition"
-                  type="button"
-                >
-                  <FaFacebookSquare />
-                </button>
-              </div> */}
               <div className="p-6 bg-slate-50 rounded-lg border mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   ইভেন্ট এক নজরে
@@ -255,17 +279,17 @@ const RunningSeminarForm = () => {
                 <li>চিপ টাইমিং</li>
                 <li>ইউনিক বিব নং</li>
                 <li>ই-সার্টিফিকেট</li>
-                <li>গিফ্ট শোলাডার ব্যাগ</li>
+                <li>গিফ্ট শোল্ডার ব্যাগ</li>
                 <li>মেডিকেল সুবিধা</li>
-                <li>ওয়াশরুম সুবিধা</li>
+                <li>ওয়াশরুম সুবিধা</li>
                 <li>নামাজের স্থান</li>
-                <li>হাইড্রেশন পয়েন্ট</li>
+                <li>হাইড্রেশন পয়েন্ট</li>
                 <li>ফটো বুথ</li>
                 <li>কিট এক্সপো</li>
                 <li>নাস্তা</li>
-                <li>ফিনিশিং শ্রিমনি</li>
+                <li>ফিনিশিং সিরিমনি</li>
                 <li>সেরা রানারদের জন্য পুরুস্কার (মেল ও ফিমেল)</li>
-                <li>***থাকছে আরও অনেক কিছু.</li>
+                <li>***এবং আরও অনেক কিছু।</li>
               </ul>
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 পার্টনারস
@@ -290,8 +314,8 @@ const RunningSeminarForm = () => {
                     করা হচ্ছে।
                   </li>
                   <li>
-                    ইভেন্টের যেকোন পরিবর্তন, পরিমার্জনের পূর্ণ অধিকার কতৃপক্ষের
-                    রয়েছে।
+                    ইভেন্টের যেকোন পরিবর্তন, পরিমার্জনের পূর্ণ অধিকার
+                    কর্তৃপক্ষের রয়েছে।
                   </li>
                 </ul>
               </div>
@@ -303,16 +327,16 @@ const RunningSeminarForm = () => {
               </h2>
               <form
                 onSubmit={handleSubmit}
-                className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"
                 noValidate
               >
-                {/* Form fields... */}
+                {/* Form Fields with Required Sign */}
                 <div>
                   <label
                     htmlFor="name"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Full Name
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -320,16 +344,21 @@ const RunningSeminarForm = () => {
                     id="name"
                     value={formData.name}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.name ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="age"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Age
+                    Age <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -337,25 +366,32 @@ const RunningSeminarForm = () => {
                     id="age"
                     value={formData.age}
                     onChange={handleChange}
-                    required
+                    onBlur={handleBlur}
                     min="10"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.age ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.age && (
+                    <p className="text-red-500 text-xs mt-1">{errors.age}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="gender"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Gender
+                    Gender <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="gender"
                     id="gender"
                     value={formData.gender}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white ${
+                      errors.gender ? "border-red-500" : "border-gray-300"
+                    }`}
                   >
                     <option value="" disabled>
                       Select Gender
@@ -363,13 +399,16 @@ const RunningSeminarForm = () => {
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
+                  {errors.gender && (
+                    <p className="text-red-500 text-xs mt-1">{errors.gender}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="occupation"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Occupation
+                    Occupation <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -377,9 +416,16 @@ const RunningSeminarForm = () => {
                     id="occupation"
                     value={formData.occupation}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.occupation ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.occupation && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.occupation}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -397,13 +443,13 @@ const RunningSeminarForm = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
                 <div>
                   <label
                     htmlFor="nid"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    NID / Birth Certificate No.
+                    NID / Birth Certificate No.{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -411,24 +457,31 @@ const RunningSeminarForm = () => {
                     id="nid"
                     value={formData.nid}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.nid ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.nid && (
+                    <p className="text-red-500 text-xs mt-1">{errors.nid}</p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label
                     htmlFor="tshirtSize"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    T-shirt Size (Chest)
+                    T-shirt Size (Chest) <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="tshirtSize"
                     id="tshirtSize"
                     value={formData.tshirtSize}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white ${
+                      errors.tshirtSize ? "border-red-500" : "border-gray-300"
+                    }`}
                   >
                     <option value="" disabled>
                       Select Size
@@ -439,30 +492,42 @@ const RunningSeminarForm = () => {
                     <option value="XL">XL (42")</option>
                     <option value="XXL">XXL (44")</option>
                   </select>
+                  {errors.tshirtSize && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.tshirtSize}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label
                     htmlFor="address"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Full Address
+                    Full Address <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="address"
                     id="address"
                     value={formData.address}
                     onChange={handleChange}
-                    required
+                    onBlur={handleBlur}
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 resize-y"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 resize-y ${
+                      errors.address ? "border-red-500" : "border-gray-300"
+                    }`}
                   ></textarea>
+                  {errors.address && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="phone"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Phone Number
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -470,17 +535,21 @@ const RunningSeminarForm = () => {
                     id="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    pattern="01[3-9]\d{8}"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.phone ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Email Address
+                    Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -488,9 +557,14 @@ const RunningSeminarForm = () => {
                     id="email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                  )}
                 </div>
                 <hr className="md:col-span-2 my-4 border-gray-200" />
                 <div>
@@ -498,15 +572,19 @@ const RunningSeminarForm = () => {
                     htmlFor="paymentMethod"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Payment Method
+                    Payment Method <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="paymentMethod"
                     id="paymentMethod"
                     value={formData.paymentMethod}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white ${
+                      errors.paymentMethod
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                   >
                     <option value="" disabled>
                       Select Method
@@ -515,13 +593,19 @@ const RunningSeminarForm = () => {
                     <option value="Nagad">Nagad</option>
                     <option value="Rocket">Rocket</option>
                   </select>
+                  {errors.paymentMethod && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.paymentMethod}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="transactionNumber"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Transaction ID (TrxID)
+                    Transaction ID (TrxID){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -529,14 +613,23 @@ const RunningSeminarForm = () => {
                     id="transactionNumber"
                     value={formData.transactionNumber}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.transactionNumber
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                   />
+                  {errors.transactionNumber && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.transactionNumber}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2 mt-6">
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-60"
+                    className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-60 transition-opacity"
                     disabled={submitting}
                   >
                     {submitting ? "Submitting..." : "Complete Registration"}
@@ -546,7 +639,7 @@ const RunningSeminarForm = () => {
             </div>
           </div>
 
-          {/* Right Column: Sticky Sidebar */}
+          {/* Right Sidebar */}
           <div className="lg:col-span-1">
             <div className="lg:sticky top-24 space-y-8 mt-8 lg:mt-0">
               <div className="bg-white p-6 rounded-xl shadow-lg border">
@@ -556,15 +649,21 @@ const RunningSeminarForm = () => {
                 <ul className="space-y-3 text-gray-600">
                   <li className="flex items-start">
                     <FlagIcon className="w-5 h-5 mr-3 mt-1 text-blue-600 flex-shrink-0" />
-                    <span>**Event Date:** August 02, 2025</span>
+                    <span>
+                      <strong>Event Date:</strong> August 02, 2025
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <ClockIcon className="w-5 h-5 mr-3 mt-1 text-blue-600 flex-shrink-0" />
-                    <span>**Reporting Time:** 5:00 AM</span>
+                    <span>
+                      <strong>Reporting Time:</strong> 5:00 AM
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <LocationMarkerIcon className="w-5 h-5 mr-3 mt-1 text-blue-600 flex-shrink-0" />
-                    <span>**Venue:** TSC, Dhaka University</span>
+                    <span>
+                      <strong>Venue:</strong> TSC, Dhaka University
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -586,7 +685,7 @@ const RunningSeminarForm = () => {
                         Complete Payment
                       </h4>
                       <p className="text-sm text-gray-600">
-                        Send fee via **"Send Money"** to:
+                        Send the fee via <strong>"Send Money"</strong> to:
                       </p>
                       <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-sm text-gray-700">
                         <li>
@@ -607,7 +706,7 @@ const RunningSeminarForm = () => {
                         Save Transaction ID
                       </h4>
                       <p className="text-sm text-gray-600">
-                        After payment, copy the **TrxID**.
+                        After payment, copy the <strong>TrxID</strong>.
                       </p>
                     </div>
                   </div>
@@ -620,7 +719,8 @@ const RunningSeminarForm = () => {
                         Fill Out Form
                       </h4>
                       <p className="text-sm text-gray-600">
-                        Enter your details and TrxID in the form to complete.
+                        Enter your details and TrxID in the form to complete
+                        registration.
                       </p>
                     </div>
                   </div>

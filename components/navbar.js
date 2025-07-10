@@ -977,13 +977,13 @@ export default function Navbar() {
                 {openMobileSubmenu === item.name && (
                   <div className="pl-4 mt-1 space-y-1">
                     {/* Main courses link */}
-                    <Link
+                    {/* <Link
                       href={item.href}
                       className={`${sidebarLinkBaseClass} ${router.pathname === item.href ? sidebarLinkActiveClass : sidebarLinkInactiveClass}`}
                       onClick={() => setIsSidebarOpen(false)}
                     >
                       All Courses
-                    </Link>
+                    </Link> */}
                     {/* Sub-menu links */}
                     {item.children.map((child) => (
                       <Link

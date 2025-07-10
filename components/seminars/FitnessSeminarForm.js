@@ -1,6 +1,6 @@
 // components/seminars/FitnessSeminarForm.js
 import { useState, useEffect } from "react";
-import Image from "next/image"; // <-- next/image আমদানি করুন
+import Image from "next/image";
 import { db } from "@/lib/firebase";
 import {
   collection,
@@ -31,16 +31,12 @@ export default function FitnessSeminarForm() {
     transactionId: "",
   });
 
-  const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const SEMINAR_FEE = 50;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
   useEffect(() => {
     if (success) {
       setShowToast(true);
@@ -49,21 +45,81 @@ export default function FitnessSeminarForm() {
     }
   }, [success]);
 
+  const validateField = (name, value) => {
+    switch (name) {
+      case "name":
+        return value.trim() ? "" : "Full Name is required.";
+      case "department":
+        return value.trim() ? "" : "Department or Institution is required.";
+      case "hall":
+        return value.trim() ? "" : "Hall name is required.";
+      case "session":
+        return value.trim() ? "" : "Session is required.";
+      case "question":
+        return value.trim()
+          ? ""
+          : "Please enter a question or topic of interest.";
+      case "phone":
+        if (!value) return "Phone number is required.";
+        if (!/^01[3-9]\d{8}$/.test(value))
+          return "Please enter a valid 11-digit Bangladeshi phone number.";
+        return "";
+      case "email":
+        if (!value) return "Email is required.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Please enter a valid email address.";
+        return "";
+      case "paymentMethod":
+        return value ? "" : "Please select a payment method.";
+      case "transactionId":
+        return value.trim() ? "" : "Transaction ID (TrxID) is required.";
+      // 'complement' is optional, no validation needed.
+      default:
+        return "";
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: validateField(name, value) });
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setErrors({ ...errors, [name]: validateField(name, value) });
+  };
+
+  const validateForm = () => {
+    const formErrors = {};
+    let isValid = true;
+    for (const [key, value] of Object.entries(form)) {
+      const error = validateField(key, value);
+      if (error) {
+        formErrors[key] = error;
+        isValid = false;
+      }
+    }
+    setErrors(formErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
-    setError(null);
     setSuccess(false);
 
     try {
       const counterRef = doc(db, "counters", "fitness_registrations_counter");
-
       await runTransaction(db, async (transaction) => {
         const counterDoc = await transaction.get(counterRef);
         if (!counterDoc.exists()) {
-          throw new Error(
-            "Counter document is missing! Please create it in Firestore."
-          );
+          throw new Error("Counter document is missing!");
         }
         const newRegNumber = counterDoc.data().currentNumber + 1;
         const newRegRef = doc(collection(db, "fitness_registrations"));
@@ -90,11 +146,12 @@ export default function FitnessSeminarForm() {
         paymentMethod: "",
         transactionId: "",
       });
+      setErrors({});
     } catch (err) {
       console.error("Error submitting form:", err);
-      setError(
-        "There was an error submitting your registration. Please try again."
-      );
+      setErrors({
+        form: "Submission failed. Please check your connection and try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -112,14 +169,41 @@ export default function FitnessSeminarForm() {
           </p>
         </div>
 
-        {/* ## চূড়ান্ত সমাধান: aspect-ratio এবং object-contain ব্যবহার ## */}
+        {showToast && (
+          <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center pointer-events-none">
+            <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up pointer-events-auto">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <div>
+                <div className="font-bold">Registration Submitted!</div>
+                <div className="text-sm">
+                  Thank you. Your submission will be confirmed after payment
+                  verification.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl">
           <div className="aspect-w-16 aspect-h-9 bg-black">
             <Image
               src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/fitness.jpg?alt=media&token=2a9d4a0e-8677-423a-a4f8-bd128537af15"
               alt="Fitness Seminar Banner"
               layout="fill"
-              objectFit="contain" // <-- object-cover এর পরিবর্তে contain ব্যবহার করুন
+              objectFit="contain"
+              priority
             />
           </div>
         </div>
@@ -127,25 +211,13 @@ export default function FitnessSeminarForm() {
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12">
           {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
-            {success && (
-              <div
-                className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
-                role="alert"
-              >
-                <p className="font-bold">Registration Submitted!</p>
-                <p>
-                  Thank you. We have received your submission and will confirm
-                  it after payment verification.
-                </p>
-              </div>
-            )}
-            {error && (
+            {errors.form && (
               <div
                 className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
                 role="alert"
               >
                 <p className="font-bold">Submission Failed</p>
-                <p>{error}</p>
+                <p>{errors.form}</p>
               </div>
             )}
 
@@ -164,21 +236,24 @@ export default function FitnessSeminarForm() {
                 <li className="flex items-start">
                   <UserIcon className="w-5 h-5 mr-3 mt-1 text-teal-600 flex-shrink-0" />
                   <span>
-                    ফিটনেস সম্পর্কে আলোচনা রাখবেন, **আবু সুফিয়ান তাজ**।
+                    ফিটনেস সম্পর্কে আলোচনা রাখবেন,{" "}
+                    <strong>আবু সুফিয়ান তাজ</strong>।
                   </span>
                 </li>
                 <li className="flex items-start">
                   <UserIcon className="w-5 h-5 mr-3 mt-1 text-teal-600 flex-shrink-0" />
                   <span>
                     সেল্ফ ডিফেন্স সম্পর্কে কথা বলবেন, ঢাকা বিশ্ববিদ্যালয়ের
-                    সাবেক শিক্ষার্থী এবং বিখ্যাত বক্সার, **সুরা কৃষ্ণ চাকমা**।
+                    সাবেক শিক্ষার্থী এবং বিখ্যাত বক্সার,{" "}
+                    <strong>সুরা কৃষ্ণ চাকমা</strong>।
                   </span>
                 </li>
                 <li className="flex items-start">
                   <UserIcon className="w-5 h-5 mr-3 mt-1 text-teal-600 flex-shrink-0" />
                   <span>
-                    আরো থাকবেন ঢাকা বিশ্ববিদ্যালয় জুডো-কারাতে কোচ **আব্দুল্লাহ
-                    আন নোমান** এবং **আরমান**।
+                    আরো থাকবেন ঢাকা বিশ্ববিদ্যালয় জুডো-কারাতে কোচ{" "}
+                    <strong>আব্দুল্লাহ আন নোমান</strong> এবং{" "}
+                    <strong>আরমান</strong>।
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -222,16 +297,15 @@ export default function FitnessSeminarForm() {
               </h2>
               <form
                 onSubmit={handleSubmit}
-                className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"
                 noValidate
               >
-                {/* Form fields... */}
                 <div>
                   <label
                     htmlFor="name"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Your Full Name
+                    Your Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -239,17 +313,23 @@ export default function FitnessSeminarForm() {
                     id="name"
                     value={form.name}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="e.g., Md. Arian Ahmed"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.name ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="department"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Department / Institution
+                    Department / Institution{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -257,17 +337,24 @@ export default function FitnessSeminarForm() {
                     id="department"
                     value={form.department}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Your Department or Institution"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.department ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.department && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.department}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="hall"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Hall
+                    Hall <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -275,17 +362,22 @@ export default function FitnessSeminarForm() {
                     id="hall"
                     value={form.hall}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Your Hall Name"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.hall ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.hall && (
+                    <p className="text-red-500 text-xs mt-1">{errors.hall}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="session"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Session
+                    Session <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -293,17 +385,25 @@ export default function FitnessSeminarForm() {
                     id="session"
                     value={form.session}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="e.g., 2021-22"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.session ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.session && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.session}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="phone"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Phone / WhatsApp Number
+                    Phone / WhatsApp Number{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -311,18 +411,22 @@ export default function FitnessSeminarForm() {
                     id="phone"
                     value={form.phone}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="e.g., 01xxxxxxxxx"
-                    required
-                    pattern="01[3-9]\d{8}"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.phone ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Email Address
+                    Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -330,28 +434,41 @@ export default function FitnessSeminarForm() {
                     id="email"
                     value={form.email}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Your active email for confirmation"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label
                     htmlFor="question"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Your Question (Fitness/Gym/Martial Art)
+                    Your Question (Fitness/Gym/Martial Art){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="question"
                     id="question"
                     value={form.question}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="What topics are you most interested in?"
-                    required
                     rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition resize-y"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition resize-y ${
+                      errors.question ? "border-red-500" : "border-gray-300"
+                    }`}
                   ></textarea>
+                  {errors.question && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.question}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label
@@ -376,15 +493,19 @@ export default function FitnessSeminarForm() {
                     htmlFor="paymentMethod"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Payment Method Used
+                    Payment Method Used <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="paymentMethod"
                     id="paymentMethod"
                     value={form.paymentMethod}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition bg-white"
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition bg-white ${
+                      errors.paymentMethod
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                   >
                     <option value="" disabled>
                       Select Method
@@ -393,13 +514,19 @@ export default function FitnessSeminarForm() {
                     <option value="Nagad">Nagad</option>
                     <option value="Rocket">Rocket</option>
                   </select>
+                  {errors.paymentMethod && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.paymentMethod}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="transactionId"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Transaction Number (TrxID)
+                    Transaction Number (TrxID){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -407,10 +534,19 @@ export default function FitnessSeminarForm() {
                     id="transactionId"
                     value={form.transactionId}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Enter the payment TrxID"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-teal-500 focus:border-teal-500 transition ${
+                      errors.transactionId
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                   />
+                  {errors.transactionId && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.transactionId}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2 mt-6">
                   <button
@@ -425,7 +561,7 @@ export default function FitnessSeminarForm() {
             </div>
           </div>
 
-          {/* Right Column: Sticky Sidebar with Payment Info */}
+          {/* Right Column: Sticky Sidebar */}
           <div className="lg:col-span-1">
             <div className="lg:sticky top-24 space-y-8 mt-8 lg:mt-0">
               <div className="bg-white p-6 rounded-xl shadow-lg border">
@@ -435,15 +571,21 @@ export default function FitnessSeminarForm() {
                 <ul className="space-y-3 text-gray-600">
                   <li className="flex items-center">
                     <CalendarIcon className="w-5 h-5 mr-3 text-teal-600" />
-                    <span>**Date:** July 26, 2025</span>
+                    <span>
+                      <strong>Date:</strong> July 26, 2025
+                    </span>
                   </li>
                   <li className="flex items-center">
                     <ClockIcon className="w-5 h-5 mr-3 text-teal-600" />
-                    <span>**Time:** 03:00 PM - 07:00 PM</span>
+                    <span>
+                      <strong>Time:</strong> 03:00 PM - 07:00 PM
+                    </span>
                   </li>
                   <li className="flex items-center">
                     <LocationMarkerIcon className="w-5 h-5 mr-3 text-teal-600" />
-                    <span>**Venue:** TSC, University of Dhaka</span>
+                    <span>
+                      <strong>Venue:</strong> TSC, University of Dhaka
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -465,8 +607,7 @@ export default function FitnessSeminarForm() {
                         Complete Payment
                       </h4>
                       <p className="text-sm text-gray-600">
-                        Send the fee to one of the numbers below via **"Send
-                        Money"**:
+                        Send fee via <strong>"Send Money"</strong> to:
                       </p>
                       <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-sm text-gray-700">
                         <li>
@@ -490,7 +631,8 @@ export default function FitnessSeminarForm() {
                         Save Transaction ID
                       </h4>
                       <p className="text-sm text-gray-600">
-                        After payment, copy the **Transaction ID (TrxID)**.
+                        After payment, copy the{" "}
+                        <strong>Transaction ID (TrxID)</strong>.
                       </p>
                     </div>
                   </div>
@@ -503,38 +645,10 @@ export default function FitnessSeminarForm() {
                         Fill Out Form
                       </h4>
                       <p className="text-sm text-gray-600">
-                        Enter your details and the **TrxID** in the form to
-                        complete registration.
+                        Enter details and the <strong>TrxID</strong> in the form
+                        to complete registration.
                       </p>
                     </div>
-                    {showToast && (
-                      <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center pointer-events-none">
-                        <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up pointer-events-auto">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <div>
-                            <div className="font-bold">
-                              Registration Submitted!
-                            </div>
-                            <div className="text-sm">
-                              Thank you. We have received your submission and
-                              will confirm it after payment verification.
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
