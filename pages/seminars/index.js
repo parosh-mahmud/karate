@@ -7,7 +7,7 @@ const seminars = [
     id: "run",
     title: "July Run 2025",
     description:
-      "🏃‍♂️  সচেতনতামূলক বার্তা ও আকর্ষণীয় পুরস্কার! আপনার বয়স ও সাইজ অনুযায়ী টি-শার্ট, ম্যাপসহ অংশগ্রহণ নিশ্চিত করুন।",
+      "🏃‍♂️  সচেতনতামূলক বার্তা ও আকর্ষণীয় পুরস্কার! আপনার বয়স ও সাইজ অনুযায়ী টি-শার্ট, ম্যাপসহ অংশগ্রহণ নিশ্চিত করুন।",
     banner:
       "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468",
   },
@@ -23,42 +23,48 @@ const seminars = [
 
 export default function SeminarList() {
   return (
-    <div className="container mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold mb-8 text-center text-brandTextPrimary dark:text-white">
-        📢 Upcoming Events
-      </h1>
+    <div className="bg-white dark:bg-slate-900">
+      <div className="container mx-auto px-4 sm:px-6 py-12">
+        <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center text-brandTextPrimary dark:text-white">
+          📢 Upcoming Events & Seminars
+        </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {seminars.map((seminar) => (
-          <div
-            key={seminar.id}
-            className="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
-          >
-            {seminar.banner && (
-              <Image
-                src={seminar.banner}
-                alt={seminar.title}
-                width={800}
-                height={400}
-                className="w-full object-cover h-64"
-              />
-            )}
-            <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-2 text-brandTextPrimary dark:text-white">
-                {seminar.title}
-              </h2>
-              <p className="text-slate-600 dark:text-slate-300 mb-4">
-                {seminar.description}
-              </p>
-              <Link
-                href={`/seminars/${seminar.id}`}
-                className="inline-block bg-brandAccent hover:bg-brandAccentHover text-white py-2 px-5 rounded-lg shadow transition"
-              >
-                Register Now
-              </Link>
-            </div>
-          </div>
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {seminars.map((seminar) => (
+            <Link
+              href={`/seminars/${seminar.id}`}
+              key={seminar.id}
+              className="block bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden group transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+            >
+              {seminar.banner && (
+                // The container maintains a consistent 16:9 shape
+                <div className="aspect-w-16 aspect-h-9 bg-black">
+                  <Image
+                    src={seminar.banner}
+                    alt={seminar.title}
+                    layout="fill"
+                    // ## FINAL FIX: Changed object-cover to object-contain ##
+                    // This ensures the entire image is visible within the container.
+                    objectFit="contain"
+                  />
+                </div>
+              )}
+              <div className="p-6 flex flex-col">
+                <h2 className="text-2xl font-semibold mb-2 text-brandTextPrimary dark:text-white group-hover:text-brandAccent dark:group-hover:text-brandAccentFocus transition-colors">
+                  {seminar.title}
+                </h2>
+                <p className="text-slate-600 dark:text-slate-300 mb-4 flex-grow">
+                  {seminar.description}
+                </p>
+                <div className="mt-4">
+                  <span className="inline-block bg-brandAccent text-white font-bold py-2.5 px-6 rounded-lg shadow-lg transition-transform transform group-hover:scale-105 group-hover:bg-brandAccentHover">
+                    Register Now
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

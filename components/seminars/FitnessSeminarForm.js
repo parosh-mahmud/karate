@@ -1,13 +1,13 @@
 // components/seminars/FitnessSeminarForm.js
 import { useState } from "react";
+import Image from "next/image"; // <-- next/image আমদানি করুন
 import { db } from "@/lib/firebase";
 import {
   collection,
-  doc, // Import doc
-  runTransaction, // Import runTransaction
+  doc,
+  runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
-
 import {
   UserIcon,
   AcademicCapIcon,
@@ -21,8 +21,8 @@ export default function FitnessSeminarForm() {
   const [form, setForm] = useState({
     name: "",
     department: "",
-    hall: "", // <-- added
-    session: "", // <-- added
+    hall: "",
+    session: "",
     phone: "",
     email: "",
     question: "",
@@ -42,7 +42,6 @@ export default function FitnessSeminarForm() {
     setForm({ ...form, [name]: value });
   };
 
-  // ## UPDATED: handleSubmit function now uses a Transaction ##
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -50,10 +49,8 @@ export default function FitnessSeminarForm() {
     setSuccess(false);
 
     try {
-      // Define a reference to the specific counter for fitness registrations
       const counterRef = doc(db, "counters", "fitness_registrations_counter");
 
-      // Run the transaction
       await runTransaction(db, async (transaction) => {
         const counterDoc = await transaction.get(counterRef);
         if (!counterDoc.exists()) {
@@ -61,20 +58,15 @@ export default function FitnessSeminarForm() {
             "Counter document is missing! Please create it in Firestore."
           );
         }
-
         const newRegNumber = counterDoc.data().currentNumber + 1;
         const newRegRef = doc(collection(db, "fitness_registrations"));
-
-        // Set the new registration document with the unique number
         transaction.set(newRegRef, {
           ...form,
-          registrationNumber: newRegNumber, // Add the unique number
+          registrationNumber: newRegNumber,
           seminarFee: SEMINAR_FEE,
           status: "pending",
           createdAt: serverTimestamp(),
         });
-
-        // Update the counter
         transaction.update(counterRef, { currentNumber: newRegNumber });
       });
 
@@ -82,8 +74,8 @@ export default function FitnessSeminarForm() {
       setForm({
         name: "",
         department: "",
-        hall: "", // <-- added
-        session: "", // <-- added
+        hall: "",
+        session: "",
         phone: "",
         email: "",
         question: "",
@@ -113,17 +105,43 @@ export default function FitnessSeminarForm() {
           </p>
         </div>
 
-        <div className="mb-12 rounded-lg overflow-hidden shadow-2xl aspect-w-16 aspect-h-7">
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/fitness.jpg?alt=media&token=2a9d4a0e-8677-423a-a4f8-bd128537af15"
-            alt="Fitness Seminar Banner"
-            className="w-full h-full object-cover"
-          />
+        {/* ## চূড়ান্ত সমাধান: aspect-ratio এবং object-contain ব্যবহার ## */}
+        <div className="mb-12 rounded-lg overflow-hidden shadow-2xl">
+          <div className="aspect-w-16 aspect-h-9 bg-black">
+            <Image
+              src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/fitness.jpg?alt=media&token=2a9d4a0e-8677-423a-a4f8-bd128537af15"
+              alt="Fitness Seminar Banner"
+              layout="fill"
+              objectFit="contain" // <-- object-cover এর পরিবর্তে contain ব্যবহার করুন
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12">
           {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
+            {success && (
+              <div
+                className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
+                role="alert"
+              >
+                <p className="font-bold">Registration Submitted!</p>
+                <p>
+                  Thank you. We have received your submission and will confirm
+                  it after payment verification.
+                </p>
+              </div>
+            )}
+            {error && (
+              <div
+                className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
+                role="alert"
+              >
+                <p className="font-bold">Submission Failed</p>
+                <p>{error}</p>
+              </div>
+            )}
+
             <div className="font-bangla bg-white p-8 rounded-xl shadow-lg mb-8">
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
                 জুলাই অভ্যুত্থানের পর আমরা বুঝেছি আত্মরক্ষা কৌশল শেখা কতটা
@@ -195,12 +213,12 @@ export default function FitnessSeminarForm() {
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
                 Registration Form
               </h2>
-
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
                 noValidate
               >
+                {/* Form fields... */}
                 <div>
                   <label
                     htmlFor="name"
@@ -484,27 +502,6 @@ export default function FitnessSeminarForm() {
                     </div>
                   </div>
                 </div>
-                {success && (
-                  <div
-                    className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
-                    role="alert"
-                  >
-                    <p className="font-bold">Registration Submitted!</p>
-                    <p>
-                      Thank you. We have received your submission and will
-                      confirm it after payment verification.
-                    </p>
-                  </div>
-                )}
-                {error && (
-                  <div
-                    className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
-                    role="alert"
-                  >
-                    <p className="font-bold">Submission Failed</p>
-                    <p>{error}</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>

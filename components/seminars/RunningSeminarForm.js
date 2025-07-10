@@ -1,17 +1,17 @@
 // components/seminars/RunningSeminarForm.jsx
 import { useState } from "react";
+import Image from "next/image"; // Import the Next.js Image component
 import { db } from "@/lib/firebase";
 import {
   collection,
   doc,
-  runTransaction, // Import runTransaction and doc
+  runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
 import {
   CalendarIcon,
   ClockIcon,
   LocationMarkerIcon,
-  SparklesIcon,
   GiftIcon,
   PhoneIcon,
   FlagIcon,
@@ -23,6 +23,7 @@ const RunningSeminarForm = () => {
     age: "",
     gender: "",
     occupation: "",
+    institution: "",
 
     nid: "",
     tshirtSize: "",
@@ -43,7 +44,6 @@ const RunningSeminarForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ## UPDATED: handleSubmit function now uses a Transaction ##
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -51,49 +51,36 @@ const RunningSeminarForm = () => {
     setSuccess(false);
 
     try {
-      // Define a reference to the counter document
       const counterRef = doc(db, "counters", "running_registrations_counter");
-
-      // Run the transaction
       await runTransaction(db, async (transaction) => {
-        // 1. Read the counter document
         const counterDoc = await transaction.get(counterRef);
         if (!counterDoc.exists()) {
           throw new Error(
             "Counter document does not exist! Please create it in Firestore."
           );
         }
-
-        // 2. Calculate the new unique registration number
         const newRegistrationNumber = counterDoc.data().currentNumber + 1;
-
-        // 3. Define the new registration document reference
         const newRegRef = doc(collection(db, "running_registrations"));
-
-        // 4. Create the new registration document within the transaction
         transaction.set(newRegRef, {
           ...formData,
-          registrationNumber: newRegistrationNumber, // Add the unique number
+          registrationNumber: newRegistrationNumber,
           seminarFee: SEMINAR_FEE,
           status: "pending",
           createdAt: serverTimestamp(),
         });
-
-        // 5. Update the counter document with the new number
         transaction.update(counterRef, {
           currentNumber: newRegistrationNumber,
         });
       });
 
       setSuccess(true);
-      // Reset form after successful submission
       setFormData({
         name: "",
         age: "",
         gender: "",
         occupation: "",
-
         institution: "",
+
         nid: "",
         tshirtSize: "",
         address: "",
@@ -121,17 +108,43 @@ const RunningSeminarForm = () => {
           </h1>
         </div>
 
-        <div className="mb-12 rounded-lg overflow-hidden shadow-2xl aspect-w-16 aspect-h-9">
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468"
-            alt="Running Event Banner"
-            className="w-full h-full object-cover"
-          />
+        {/* ## FIXED IMAGE ## */}
+        <div className="mb-12 rounded-lg overflow-hidden shadow-2xl">
+          <div className="aspect-w-16 aspect-h-9 bg-black">
+            <Image
+              src="https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468"
+              alt="Running Event Banner"
+              layout="fill"
+              objectFit="contain" // Use "contain" to ensure the full image is visible
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12">
           {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
+            {success && (
+              <div
+                className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
+                role="alert"
+              >
+                <p className="font-bold">Registration Submitted!</p>
+                <p>
+                  Thank you. Your submission is received and will be verified
+                  soon.
+                </p>
+              </div>
+            )}
+            {error && (
+              <div
+                className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
+                role="alert"
+              >
+                <p className="font-bold">Submission Failed</p>
+                <p>{error}</p>
+              </div>
+            )}
+
             <div className="bg-white p-8 rounded-xl shadow-lg mb-8 font-bangla">
               {/* Event Details and other text content */}
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
@@ -154,7 +167,7 @@ const RunningSeminarForm = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                   <p>
-                    <strong>ইভেন্ট:</strong> July Run 2025
+                    <strong>ইভেন্ট:</strong> July Run 5k
                   </p>
                   <p>
                     <strong>ভেনুঃ</strong> টিএসসি, ঢাকা বিশ্ববিদ্যালয়
@@ -166,7 +179,7 @@ const RunningSeminarForm = () => {
                     <strong>দূরত্ব:</strong> ৫ কিলোমিটার
                   </p>
                   <p>
-                    <strong>সময়:</strong> ১ ঘণ্টা
+                    <strong>সময়:</strong> ১ ঘণ্টা
                   </p>
                   <p>
                     <strong>রেজিস্ট্রেশন ডেডলাইন:</strong> ২০ জুলাই, ২০২৫
@@ -227,7 +240,6 @@ const RunningSeminarForm = () => {
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
                 Registration Form
               </h2>
-
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6"
@@ -305,6 +317,22 @@ const RunningSeminarForm = () => {
                     value={formData.occupation}
                     onChange={handleChange}
                     required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="institution"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Institution
+                  </label>
+                  <input
+                    type="text"
+                    name="institution"
+                    id="institution"
+                    value={formData.institution}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -550,27 +578,6 @@ const RunningSeminarForm = () => {
                   </ul>
                 </div>
               </div>
-              {success && (
-                <div
-                  className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
-                  role="alert"
-                >
-                  <p className="font-bold">Registration Submitted!</p>
-                  <p>
-                    Thank you. Your submission is received and will be verified
-                    soon.
-                  </p>
-                </div>
-              )}
-              {error && (
-                <div
-                  className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
-                  role="alert"
-                >
-                  <p className="font-bold">Submission Failed</p>
-                  <p>{error}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
