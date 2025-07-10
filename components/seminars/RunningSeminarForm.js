@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Image from "next/image"; // Import the Next.js Image component
 import { db } from "@/lib/firebase";
+import { useEffect } from "react";
+
 import {
   collection,
   doc,
@@ -16,6 +18,7 @@ import {
   PhoneIcon,
   FlagIcon,
 } from "@heroicons/react/outline";
+import { FaFacebookSquare } from "react-icons/fa"; // npm install react-icons
 
 const RunningSeminarForm = () => {
   const [formData, setFormData] = useState({
@@ -37,12 +40,25 @@ const RunningSeminarForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
   const SEMINAR_FEE = 700;
+  const shareUrl = "https://www.jkcombatacademy.com/seminars/run"; // Replace with your actual event URL
+  const shareText = encodeURIComponent(
+    "Join the July Run 2025! Register now and be part of the event."
+  );
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  // Show toast when success changes to true
+  useEffect(() => {
+    if (success) {
+      setShowToast(true);
+      const timer = setTimeout(() => setShowToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,10 +120,35 @@ const RunningSeminarForm = () => {
       <div className="container mx-auto px-4 py-12 md:py-20">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            July Run 5k Registration
+            July Run 2025 Registration
           </h1>
         </div>
-
+        {showToast && (
+          <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center pointer-events-none">
+            <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up pointer-events-auto">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <div>
+                <div className="font-bold">Registration Submitted!</div>
+                <div className="text-sm">
+                  Thank you. Your submission is received and will be verified
+                  soon.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* ## FIXED IMAGE ## */}
         <div className="mb-12 rounded-lg overflow-hidden shadow-2xl">
           <div className="aspect-w-16 aspect-h-9 bg-black">
@@ -123,7 +164,7 @@ const RunningSeminarForm = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-12">
           {/* Left Column: Details & Form */}
           <div className="lg:col-span-2">
-            {success && (
+            {/* {success && (
               <div
                 className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6"
                 role="alert"
@@ -134,7 +175,7 @@ const RunningSeminarForm = () => {
                   soon.
                 </p>
               </div>
-            )}
+            )} */}
             {error && (
               <div
                 className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6"
@@ -161,6 +202,22 @@ const RunningSeminarForm = () => {
                 বিজয়গাঁথা বাংলাদেশের মানচিত্রে এঁকে তৈরি করা হয়েছে এক চমৎকার
                 মেডেল, আকর্ষণীয় মেডেলটি অর্জনের জন্য এখনই রেজিস্ট্রেশন করুন!
               </p>
+              {/* <div className="flex justify-center mb-6">
+                <button
+                  aria-label="Share on Facebook"
+                  onClick={() => {
+                    window.open(
+                      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${shareText}`,
+                      "_blank",
+                      "noopener,noreferrer"
+                    );
+                  }}
+                  className="text-blue-600 hover:text-blue-800 text-3xl transition"
+                  type="button"
+                >
+                  <FaFacebookSquare />
+                </button>
+              </div> */}
               <div className="p-6 bg-slate-50 rounded-lg border mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   ইভেন্ট এক নজরে
@@ -190,21 +247,25 @@ const RunningSeminarForm = () => {
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-4">
-                যা যা থাকছে অংশগ্রহণকারীদের জন্য:
+                যা যা থাকছে আপনার জন্য:
               </h3>
-              <ul className="space-y-3 text-gray-600 mb-8">
-                <li className="flex items-center">
-                  <GiftIcon className="w-5 h-5 mr-3 text-blue-600" />
-                  <span>ফিনিশার মেডেল ও ই-সার্টিফিকেট</span>
-                </li>
-                <li className="flex items-center">
-                  <GiftIcon className="w-5 h-5 mr-3 text-blue-600" />
-                  <span>বিব নম্বর ও গিফট ভর্তি ব্যাগ</span>
-                </li>
-                <li className="flex items-center">
-                  <GiftIcon className="w-5 h-5 mr-3 text-blue-600" />
-                  <span>সকালের নাস্তা এবং সেরা রানারদের জন্য পুরস্কার</span>
-                </li>
+              <ul className="space-y-3 text-gray-600 mb-8 list-disc list-inside">
+                <li>রান ফ্রেন্ডলি টি-শার্ট</li>
+                <li>ফিনিশার মেডেল</li>
+                <li>চিপ টাইমিং</li>
+                <li>ইউনিক বিব নং</li>
+                <li>ই-সার্টিফিকেট</li>
+                <li>গিফ্ট শোলাডার ব্যাগ</li>
+                <li>মেডিকেল সুবিধা</li>
+                <li>ওয়াশরুম সুবিধা</li>
+                <li>নামাজের স্থান</li>
+                <li>হাইড্রেশন পয়েন্ট</li>
+                <li>ফটো বুথ</li>
+                <li>কিট এক্সপো</li>
+                <li>নাস্তা</li>
+                <li>ফিনিশিং শ্রিমনি</li>
+                <li>সেরা রানারদের জন্য পুরুস্কার (মেল ও ফিমেল)</li>
+                <li>***থাকছে আরও অনেক কিছু.</li>
               </ul>
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 পার্টনারস

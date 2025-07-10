@@ -1,5 +1,5 @@
 // components/seminars/FitnessSeminarForm.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image"; // <-- next/image আমদানি করুন
 import { db } from "@/lib/firebase";
 import {
@@ -34,13 +34,20 @@ export default function FitnessSeminarForm() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const [showToast, setShowToast] = useState(false);
   const SEMINAR_FEE = 50;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
+  useEffect(() => {
+    if (success) {
+      setShowToast(true);
+      const timer = setTimeout(() => setShowToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -500,6 +507,34 @@ export default function FitnessSeminarForm() {
                         complete registration.
                       </p>
                     </div>
+                    {showToast && (
+                      <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center pointer-events-none">
+                        <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up pointer-events-auto">
+                          <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          <div>
+                            <div className="font-bold">
+                              Registration Submitted!
+                            </div>
+                            <div className="text-sm">
+                              Thank you. We have received your submission and
+                              will confirm it after payment verification.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
