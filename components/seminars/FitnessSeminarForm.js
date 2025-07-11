@@ -488,6 +488,21 @@ export default function FitnessSeminarForm() {
                   ></textarea>
                 </div>
                 <hr className="md:col-span-2 my-4 border-gray-200" />
+                <div className="md:col-span-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700 bg-teal-50 border border-teal-200 rounded px-3 py-2 mb-2">
+                    <span className="font-semibold text-teal-700">
+                      Send Money to:
+                    </span>
+                    <span className="font-semibold">bKash/Nagad/Rocket</span>
+                    <span className="font-mono text-teal-700">01985540923</span>
+
+                    <span className="ml-4 text-gray-600">
+                      Use <span className="font-semibold">"Send Money"</span>{" "}
+                      option, Copy your TransactionID and past here.
+                    </span>
+                  </div>
+                </div>
+
                 <div>
                   <label
                     htmlFor="paymentMethod"
@@ -611,13 +626,7 @@ export default function FitnessSeminarForm() {
                       </p>
                       <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-sm text-gray-700">
                         <li>
-                          <strong>bKash:</strong> 01985540923
-                        </li>
-                        <li>
-                          <strong>Nagad:</strong> 01985540923
-                        </li>
-                        <li>
-                          <strong>Rocket:</strong> 01985540923
+                          <strong>bKash/Nagad/Rocket</strong> 01985540923
                         </li>
                       </ul>
                     </div>

@@ -361,11 +361,13 @@ export default function RunningRegistrationsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">
                   Participant
                 </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+                  Transaction ID
+                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">
                   Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">
-                  T-Shirt
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">
                   Status
@@ -390,6 +392,14 @@ export default function RunningRegistrationsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-semibold text-gray-700 mb-1">
+                      {reg.paymentMethod}
+                    </div>
+                    <span className="font-extrabold text-lg text-blue-700 bg-white px-3 py-1 rounded">
+                      {reg.transactionNumber}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-brandTextSecondary dark:text-slate-400">
                       {reg.phone}
                     </div>
@@ -397,9 +407,7 @@ export default function RunningRegistrationsPage() {
                       {reg.email}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-brandTextPrimary dark:text-slate-300">
-                    {reg.tshirtSize}
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${(reg.status || "pending") === "confirmed" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"}`}

@@ -567,6 +567,21 @@ const RunningSeminarForm = () => {
                   )}
                 </div>
                 <hr className="md:col-span-2 my-4 border-gray-200" />
+                <div className="md:col-span-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded px-3 py-2 mb-2">
+                    <span className="font-semibold text-blue-700">
+                      Send Money to:
+                    </span>
+                    <span className="font-semibold">bKash/Rocket:</span>
+                    <span className="font-mono text-blue-700">01985540923</span>
+                    <span className="font-semibold ml-4">Nagad:</span>
+                    <span className="font-mono text-blue-700">01780941195</span>
+                    <span className="ml-4 text-gray-600">
+                      Use <span className="font-semibold">"Send Money"</span>{" "}
+                      option, copy your TransactionID and past here.
+                    </span>
+                  </div>
+                </div>
                 <div>
                   <label
                     htmlFor="paymentMethod"
