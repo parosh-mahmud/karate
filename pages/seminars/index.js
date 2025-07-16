@@ -3,14 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 
 const seminars = [
-  {
-    id: "run",
-    title: "July Run 2025",
-    description:
-      "🏃‍♂️  সচেতনতামূলক বার্তা ও আকর্ষণীয় পুরস্কার! আপনার বয়স ও সাইজ অনুযায়ী টি-শার্ট, ম্যাপসহ অংশগ্রহণ নিশ্চিত করুন।",
-    banner:
-      "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468",
-  },
+  // {
+  //   id: "run",
+  //   title: "July Run 2025",
+  //   description:
+  //     "🏃‍♂️  সচেতনতামূলক বার্তা ও আকর্ষণীয় পুরস্কার! আপনার বয়স ও সাইজ অনুযায়ী টি-শার্ট, ম্যাপসহ অংশগ্রহণ নিশ্চিত করুন।",
+  //   banner:
+  //     "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468",
+  // },
   {
     id: "fitness",
     title: "Self-Defense & Fitness Seminar",

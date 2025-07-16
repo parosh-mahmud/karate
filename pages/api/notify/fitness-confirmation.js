@@ -46,62 +46,96 @@
 //   }
 // }
 
-import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { FitnessConfirmationEmail } from "../../../components/emails/FitnessConfirmationEmail";
-import SibApiV3Sdk from "sib-api-v3-sdk";
+// import React from "react";
+// import { renderToStaticMarkup } from "react-dom/server";
+// import { FitnessConfirmationEmail } from "../../../components/emails/FitnessConfirmationEmail";
+// import SibApiV3Sdk from "sib-api-v3-sdk";
+
+// export default async function handler(req, res) {
+//   if (req.method !== "POST") {
+//     return res.status(405).json({ error: "Method Not Allowed" });
+//   }
+
+//   try {
+//     const { name, email, registrationNumber } = req.body;
+
+//     if (!name || !email || !registrationNumber) {
+//       return res.status(400).json({
+//         error: "Name, email, and registration number are required.",
+//       });
+//     }
+
+//     // Configure Brevo SDK
+//     const defaultClient = SibApiV3Sdk.ApiClient.instance;
+//     const apiKey = defaultClient.authentications["api-key"];
+//     apiKey.apiKey = process.env.BREVO_API_KEY;
+
+//     // Render your React email component into static HTML
+//     const htmlContent = renderToStaticMarkup(
+//       <FitnessConfirmationEmail
+//         name={name}
+//         registrationNumber={registrationNumber}
+//       />
+//     );
+
+//     // Prepare the email
+//     const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+//     const sendSmtpEmail = {
+//       sender: {
+//         name: "JK Combat Academy",
+//         email: "support@jkcombatacademy.com", // Must be verified
+//       },
+//       to: [{ email, name }],
+//       subject: `Registration Confirmed: Fitness & Self-Defense Seminar (Reg #${registrationNumber})`,
+//       htmlContent,
+//     };
+
+//     // Send the email
+//     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+//     // Success response
+//     res.status(200).json({
+//       message: "Fitness confirmation email sent successfully.",
+//       data,
+//     });
+//   } catch (error) {
+//     console.error("Brevo error:", error.response?.body || error.message);
+//     res.status(500).json({
+//       error: "Failed to send fitness confirmation email.",
+//     });
+//   }
+// }
+
+// pages/api/notify/fitness-confirmation.js
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
-    const { name, email, registrationNumber } = req.body;
+    const { method, amount, sender, trxId, time, raw } = req.body;
 
-    if (!name || !email || !registrationNumber) {
-      return res.status(400).json({
-        error: "Name, email, and registration number are required.",
-      });
+    if (!method || !amount || !sender || !trxId) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Configure Brevo SDK
-    const defaultClient = SibApiV3Sdk.ApiClient.instance;
-    const apiKey = defaultClient.authentications["api-key"];
-    apiKey.apiKey = process.env.BREVO_API_KEY;
-
-    // Render your React email component into static HTML
-    const htmlContent = renderToStaticMarkup(
-      <FitnessConfirmationEmail
-        name={name}
-        registrationNumber={registrationNumber}
-      />
-    );
-
-    // Prepare the email
-    const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-    const sendSmtpEmail = {
-      sender: {
-        name: "JK Combat Academy",
-        email: "support@jkcombatacademy.com", // Must be verified
-      },
-      to: [{ email, name }],
-      subject: `Registration Confirmed: Fitness & Self-Defense Seminar (Reg #${registrationNumber})`,
-      htmlContent,
-    };
-
-    // Send the email
-    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-
-    // Success response
-    res.status(200).json({
-      message: "Fitness confirmation email sent successfully.",
-      data,
+    // Optional: Save to database or log file here
+    console.log("📥 New Payment Received:", {
+      method,
+      amount,
+      sender,
+      trxId,
+      time,
+      raw,
     });
+
+    // Simulate storing/logging
+    // await saveToDatabase({ method, amount, sender, trxId, time });
+
+    return res.status(200).json({ message: "Payment logged successfully" });
   } catch (error) {
-    console.error("Brevo error:", error.response?.body || error.message);
-    res.status(500).json({
-      error: "Failed to send fitness confirmation email.",
-    });
+    console.error("❌ Error saving payment:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
