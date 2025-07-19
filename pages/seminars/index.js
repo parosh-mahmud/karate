@@ -11,7 +11,7 @@ const seminars = [
     banner:
       "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/run%20for%20july%201.jpg?alt=media&token=8faf5906-1c3a-4f36-9b08-6192e0599468",
     // MODIFICATION: Added an 'href' property for the external link.
-    href: "https://july.upbangladesh.org/?fbclid=IwY2xjawLnbGVleHRuA2FlbQIxMABicmlkETFVTnpjNVVnU0FTVlRtdGM1AR79KexyuYNnyqNXV5GDDQrP0elGU19MwEvCfPAtglaGLEax7Q_ttp2vgbWUzQ_aem_9U69RcRKCTA70nsI4gqBwA",
+    href: "/seminars/run",
   },
   {
     id: "fitness",
