@@ -1,10 +1,12 @@
 // pages/admin/index.js
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { db } from "../../lib/firebase"; // Make sure this path is correct
+import { useRouter } from "next/router";
+import { db, auth } from "../../lib/firebase"; // Make sure this path is correct
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
-
+import { useAuthState } from "react-firebase-hooks/auth";
+import { doc, getDoc } from "firebase/firestore";
 // --- EXISTING ICONS ---
 const ProductIcon = () => (
   <svg
@@ -194,11 +196,44 @@ export default function AdminHomePage() {
   const [fitnessRegistrations, setFitnessRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, loadingAuth] = useAuthState(auth);
+
+  const router = useRouter();
+
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const verifyAdmin = async () => {
+      if (!user) {
+        router.push("/"); // redirect to login
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+
+        if (userData?.role === "admin") {
+          setIsAdmin(true);
+        } else {
+          router.push("/unauthorized"); // redirect non-admins
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role:", err);
+        setError("Access denied.");
+        router.push("/unauthorized");
+      }
+    };
+
+    verifyAdmin();
+  }, [user]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
     const fetchRegistrations = async () => {
       try {
-        // Fetch Running Seminar Registrations
+        // Fetch running and fitness registrations (same as before)
         const runningQuery = query(
           collection(db, "running_registrations"),
           orderBy("createdAt", "desc")
@@ -208,7 +243,6 @@ export default function AdminHomePage() {
           runningSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
         );
 
-        // Fetch Fitness Seminar Registrations
         const fitnessQuery = query(
           collection(db, "fitness_registrations"),
           orderBy("createdAt", "desc")
@@ -226,7 +260,40 @@ export default function AdminHomePage() {
     };
 
     fetchRegistrations();
-  }, []);
+  }, [isAdmin]);
+
+  // useEffect(() => {
+  //   const fetchRegistrations = async () => {
+  //     try {
+  //       // Fetch Running Seminar Registrations
+  //       const runningQuery = query(
+  //         collection(db, "running_registrations"),
+  //         orderBy("createdAt", "desc")
+  //       );
+  //       const runningSnapshot = await getDocs(runningQuery);
+  //       setRunningRegistrations(
+  //         runningSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  //       );
+
+  //       // Fetch Fitness Seminar Registrations
+  //       const fitnessQuery = query(
+  //         collection(db, "fitness_registrations"),
+  //         orderBy("createdAt", "desc")
+  //       );
+  //       const fitnessSnapshot = await getDocs(fitnessQuery);
+  //       setFitnessRegistrations(
+  //         fitnessSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  //       );
+  //     } catch (err) {
+  //       console.error("Error fetching registrations:", err);
+  //       setError("Could not load registration data.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchRegistrations();
+  // }, []);
 
   const cardBaseStyle =
     "bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-brandAccent/30 transition-shadow duration-300 flex flex-col";
