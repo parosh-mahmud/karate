@@ -617,6 +617,7 @@ export default function AdminOrdersPage() {
                       </p>
                     </div>
                   </td>
+                  //comments
                   <td className={tableCellStyle}>
                     <div className="space-y-1">
                       <p className="font-semibold">
