@@ -13,16 +13,16 @@ const seminars = [
   //   // MODIFICATION: Added an 'href' property for the external link.
   //   href: "/seminars/run",
   // },
-  {
-    id: "fitness",
-    title: "Self-Defense & Fitness Seminar",
-    description:
-      "💪 ফিটনেস, জিম এবং মার্শাল আর্ট সম্পর্কিত প্রশ্ন ও উত্তর, আলোচনা এবং প্রশিক্ষণ সেশনে অংশ নিন।",
-    banner:
-      "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/fitness.jpg?alt=media&token=2a9d4a0e-8677-423a-a4f8-bd128537af15",
-    // MODIFICATION: Added an 'href' property for the internal link.
-    href: "/seminars/fitness",
-  },
+  // {
+  //   id: "fitness",
+  //   title: "Self-Defense & Fitness Seminar",
+  //   description:
+  //     "💪 ফিটনেস, জিম এবং মার্শাল আর্ট সম্পর্কিত প্রশ্ন ও উত্তর, আলোচনা এবং প্রশিক্ষণ সেশনে অংশ নিন।",
+  //   banner:
+  //     "https://firebasestorage.googleapis.com/v0/b/jkcombat-27a89.firebasestorage.app/o/fitness.jpg?alt=media&token=2a9d4a0e-8677-423a-a4f8-bd128537af15",
+  //   // MODIFICATION: Added an 'href' property for the internal link.
+  //   href: "/seminars/fitness",
+  // },
 ];
 
 export default function SeminarList() {
